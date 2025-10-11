@@ -834,30 +834,39 @@
         }
 
         function updateAllTotals() {
-            const totals = {
-                l1: 0, l2: 0, l3: 0, l4: 0, l5: 0,
-                volume: 0, grand: 0
-            };
-            
-            rows.forEach(row => {
-                totals.l1 += parseFloat(row.l1) || 0;
-                totals.l2 += parseFloat(row.l2) || 0;
-                totals.l3 += parseFloat(row.l3) || 0;
-                totals.l4 += parseFloat(row.l4) || 0;
-                totals.l5 += parseFloat(row.l5) || 0;
-                totals.volume += parseFloat(row.volume) || 0;
-                totals.grand += calculateTotal(row);
-            });
-            
-            document.getElementById('totalL1').textContent = formatNumber(totals.l1);
-            document.getElementById('totalL2').textContent = formatNumber(totals.l2);
-            document.getElementById('totalL3').textContent = formatNumber(totals.l3);
-            document.getElementById('totalL4').textContent = formatNumber(totals.l4);
-            document.getElementById('totalL5').textContent = formatNumber(totals.l5);
-            document.getElementById('totalVolume').textContent = formatNumber(totals.volume);
-            document.getElementById('grandTotal').textContent = formatNumber(totals.grand);
-            document.getElementById('totalRows').textContent = rows.length;
+    const totals = {
+        l1: 0, l2: 0, l3: 0, l4: 0, l5: 0,
+        volume: 0, grand: 0
+    };
+    
+    // Đếm số hàng có tổng khác 0
+    let nonZeroRowCount = 0;
+    
+    rows.forEach(row => {
+        const rowTotal = calculateTotal(row);
+        
+        // Chỉ tính các hàng có tổng khác 0
+        if (rowTotal !== 0) {
+            nonZeroRowCount++;
+            totals.l1 += parseFloat(row.l1) || 0;
+            totals.l2 += parseFloat(row.l2) || 0;
+            totals.l3 += parseFloat(row.l3) || 0;
+            totals.l4 += parseFloat(row.l4) || 0;
+            totals.l5 += parseFloat(row.l5) || 0;
+            totals.volume += parseFloat(row.volume) || 0;
+            totals.grand += rowTotal;
         }
+    });
+    
+    document.getElementById('totalL1').textContent = formatNumber(totals.l1);
+    document.getElementById('totalL2').textContent = formatNumber(totals.l2);
+    document.getElementById('totalL3').textContent = formatNumber(totals.l3);
+    document.getElementById('totalL4').textContent = formatNumber(totals.l4);
+    document.getElementById('totalL5').textContent = formatNumber(totals.l5);
+    document.getElementById('totalVolume').textContent = formatNumber(totals.volume);
+    document.getElementById('grandTotal').textContent = formatNumber(totals.grand);
+    document.getElementById('totalRows').textContent = nonZeroRowCount; // Chỉ hiển thị số hàng có tổng khác 0
+}
 
         // Render table
         function renderTable() {
