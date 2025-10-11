@@ -1,7 +1,6 @@
 # 🏭 Hệ Thống Quản Lý Kho Thông Minh
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-brightgreen)](https://[username].github.io/he-thong-quan-ly-kho)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/GitHub-Pages-brightgreen)](https://NDHungprv.github.io/he-thong-quan-ly-kho)
 
 Hệ thống web toàn diện cho quản lý kho và tính toán công nghiệp, gồm 3 ứng dụng chính:
 
@@ -27,7 +26,7 @@ Hệ thống web toàn diện cho quản lý kho và tính toán công nghiệp,
 
 ## 🚀 Sử Dụng
 
-**Truy cập ngay:** [https://[username].github.io/he-thong-quan-ly-kho](https://[username].github.io/he-thong-quan-ly-kho)
+**Truy cập ngay:** [https://NDHungprv.github.io/he-thong-quan-ly-kho](https://[username].github.io/he-thong-quan-ly-kho)
 
 Hoặc clone repository:
 ```bash
