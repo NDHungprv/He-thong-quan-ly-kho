@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Bảng Tính Di Động</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding-bottom: 80px;
+            overscroll-behavior: contain;
+        }
+        
+        /* Header Compact */
+        .header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 6px 8px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-title {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .header-subtitle {
+            font-size: 11px;
+            opacity: 0.85;
+            font-weight: 300;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .header-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: 8px;
+        }
+        .header-actions button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            user-select: none;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header-actions button:active {
+            transform: scale(0.95);
+        }
+        .header-actions button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-add-row { background: #8b5cf6; }
+        .btn-add-row:hover { background: #7c3aed; }
+        .btn-insert { background: #8b5cf6; }
+        .btn-insert:hover { background: #7c3aed; }
+        .btn-delete { background: #ef4444; }
+        .btn-delete:hover { background: #dc2626; }
+        .btn-menu { background: #3b82f6; }
+        .btn-menu:hover { background: #2563eb; }
+        
+        .content {
+            margin-top: 50px;
+            padding: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table-container {
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            border-spacing: 0;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        /* Điều chỉnh kích thước cột */
+        th:first-child, td:first-child {
+            width: 50px;
+            min-width: 50px;
+        }
+        
+        th:nth-child(2), td:nth-child(2) {
+            min-width: 120px;
+        }
+        
+        th:nth-child(3), td:nth-child(3),
+        th:nth-child(4), td:nth-child(4),
+        th:nth-child(5), td:nth-child(5),
+        th:nth-child(6), td:nth-child(6),
+        th:nth-child(7), td:nth-child(7) {
+            min-width: 80px;
+        }
+        
+        th:nth-child(8), td:nth-child(8) {
+            min-width: 90px;
+        }
+        
+        th:nth-child(9), td:nth-child(9) {
+            min-width: 100px;
+        }
+        
+        th:nth-child(10), td:nth-child(10) {
+            width: 60px;
+            min-width: 60px;
+        }
+        
+        tr.selected {
+            background: #dbeafe !important;
+        }
+        tr.selected td {
+            background: inherit;
+        }
+        tr.selected .col-total {
+            background: linear-gradient(135deg, #93c5fd, #60a5fa);
+        }
+        
+        tr.marked {
+            background: #fef3c7 !important;
+        }
+        tr.marked td {
+            background: inherit;
+        }
+        tr.marked .col-total {
+            background: linear-gradient(135deg, #fde68a, #fcd34d);
+        }
+        
+        tr.selected.marked {
+            background: linear-gradient(135deg, #dbeafe, #fef3c7) !important;
+        }
+       
+        th {
+            background: linear-gradient(180deg, #f3f4f6, #e5e7eb);
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            color: #374151;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        td input {
+            width: 100%;
+            padding: 6px;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+            background: #f9fafb;
+            user-select: text;
+        }
+        td input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: white;
+        }
+        td input[type="number"] {
+            font-weight: 500;
+        }
+        
+        .col-total {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            font-weight: 700;
+            user-select: text;
+            color: #92400e;
+            font-size: 14px;
+        }
+        
+        /* Name column styling for text wrapping */
+        .name-cell {
+            white-space: normal;
+            word-wrap: break-word;
+            text-align: left;
+            height: auto;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .name-cell input {
+            text-align: left;
+            white-space: normal;
+            word-wrap: break-word;
+            height: auto;
+            min-height: 30px;
+        }
+        
+        .btn-mark {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            font-size: 18px;
+            padding: 4px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-mark:hover {
+            background: linear-gradient(135deg, #d97706, #b45309);
+        }
+        .btn-mark.active {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+            box-shadow: 0 0 0 2px #fef3c7;
+        }
+        .btn-mark:active {
+            transform: scale(0.95);
+        }
+        
+        /* Footer với thiết kế mới hai dòng */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 10px 12px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            height: 130px;
+            user-select: none;
+            transition: transform 0.3s ease;
+        }
+        .footer.keyboard-active {
+            transform: translateY(100%);
+        }
+        .footer-totals {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+        }
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .footer-item {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 6px;
+            border-radius: 6px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .footer-item:active {
+            transform: scale(0.98);
+        }
+        .footer-item-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .footer-item-value {
+            font-size: 16px;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .footer-item-grand {
+            background: rgba(255,255,255,0.35);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Modal với menu tích hợp */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 2000;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch;
+            backdrop-filter: blur(5px);
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 75vh;
+            overflow: auto;
+            padding: 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-header {
+            padding: 16px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+        }
+        .modal-header h2 {
+            font-size: 18px;
+            user-select: none;
+            color: #1f2937;
+            font-weight: 700;
+        }
+        .modal-close {
+            background: #ef4444;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            user-select: none;
+            padding: 4px 12px;
+            line-height: 1;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-weight: 700;
+        }
+        .modal-close:hover {
+            background: #dc2626;
+            transform: rotate(90deg);
+        }
+        .modal-body {
+            padding: 16px;
+        }
+        .modal-section {
+            margin-bottom: 20px;
+        }
+        .modal-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            user-select: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .modal-btn:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+        }
+        .modal-btn:active {
+            transform: translateY(0);
+        }
+        .btn-save { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-save:hover { background: linear-gradient(135deg, #059669, #047857); }
+        .btn-export { background: linear-gradient(135deg, #059669, #047857); }
+        .btn-export:hover { background: linear-gradient(135deg, #047857, #065f46); }
+        .btn-import { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-import:hover { background: linear-gradient(135deg, #d97706, #b45309); }
+        .btn-new { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .btn-new:hover { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+        
+        .sheet-item {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: all 0.2s;
+            border-radius: 6px;
+            margin-bottom: 4px;
+        }
+        .sheet-item:hover {
+            background: #f3f4f6;
+            transform: translateX(4px);
+        }
+        .sheet-info {
+            cursor: pointer;
+            flex: 1;
+            text-align: left;
+        }
+        .sheet-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+            font-size: 15px;
+            color: #1f2937;
+        }
+        .sheet-date {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #1f2937, #111827);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 3000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 13px;
+            animation: slideDown 0.3s ease-out, fadeOutUp 0.3s ease-in 2.2s;
+            user-select: none;
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+        @keyframes fadeOutUp {
+            from {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+            to {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+        }
+
+        .file-input-container {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .empty-state-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Loading spinner */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive for small devices */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 14px;
+            }
+            .header-actions button {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+            th, td {
+                font-size: 12px;
+                padding: 6px;
+            }
+            td input {
+                padding: 4px;
+                font-size: 12px;
+            }
+            .footer-item-value {
+                font-size: 14px;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1f2937;
+            }
+            table {
+                background: #374151;
+            }
+            th {
+                background: linear-gradient(180deg, #4b5563, #374151);
+                color: #f3f4f6;
+            }
+            td {
+                border-color: #4b5563;
+                color: #f3f4f6;
+            }
+            td input {
+                background: #1f2937;
+                color: #f3f4f6;
+                border-color: #4b5563;
+            }
+            td input:focus {
+                background: #374151;
+            }
+            .modal-content {
+                background: #374151;
+            }
+            .modal-header {
+                background: linear-gradient(135deg, #4b5563, #374151);
+                border-bottom-color: #4b5563;
+            }
+            .modal-header h2 {
+                color: #f3f4f6;
+            }
+            .sheet-item {
+                border-bottom-color: #4b5563;
+            }
+            .sheet-item:hover {
+                background: #4b5563;
+            }
+            .sheet-name {
+                color: #f3f4f6;
+            }
+            .sheet-date {
+                color: #9ca3af;
+            }
+            .modal-section-title {
+                color: #f3f4f6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">
+            <h1 id="sheetName" title="Click để đổi tên">Bảng Tính Mới</h1>
+            <div class="header-subtitle">Nhấn Enter để di chuyển • Tab để chuyển ô • ↑↓ để lên/xuống</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-add-row" id="btnAddRow">➕ Thêm</button>
+            <button class="btn-insert" id="btnInsert">⬇️ Chèn</button>
+            <button class="btn-delete" id="btnDelete">🗑️ Xóa</button>
+            <button class="btn-menu" id="btnMenu">☰ Menu</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="table-container">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên Mục</th>
+                        <th>Cấp 1</th>
+                        <th>Cấp 2</th>
+                        <th>Cấp 3</th>
+                        <th>Cấp 4</th>
+                        <th>Cấp 5</th>
+                        <th>Tổng</th>
+                        <th>Khối lượng</th>
+                        <th>⭐</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer" id="footer">
+        <div class="footer-totals">
+            <div class="footer-row">
+                <div class="footer-item">
+                    <div class="footer-item-label">Cấp 1</div>
+                    <div class="footer-item-value" id="totalL1">0</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Cấp 2</div>
+                    <div class="footer-item-value" id="totalL2">0</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Cấp 3</div>
+                    <div class="footer-item-value" id="totalL3">0</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Cấp 4</div>
+                    <div class="footer-item-value" id="totalL4">0</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Cấp 5</div>
+                    <div class="footer-item-value" id="totalL5">0</div>
+                </div>
+            </div>
+            <div class="footer-row">
+                <div class="footer-item footer-item-grand">
+                    <div class="footer-item-label">Tổng</div>
+                    <div class="footer-item-value" id="grandTotal">0</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Tổng KL</div>
+                    <div class="footer-item-value" id="totalVolume">0</div>
+                </div>
+                <div class="footer-item">
+                    <div class="footer-item-label">Tổng số hàng</div>
+                    <div class="footer-item-value" id="totalRows">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Menu Bảng Tính</h2>
+                <button class="modal-close" id="modalClose" title="Đóng">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">📁 Quản lý tệp</div>
+                    <div class="modal-buttons">
+                        <button class="modal-btn btn-save" id="btnSave">
+                            💾 Lưu bảng tính
+                        </button>
+                        <button class="modal-btn btn-export" id="btnExport">
+                            📥 Xuất CSV
+                        </button>
+                        <button class="modal-btn btn-import" id="btnImport">
+                            📁 Nhập từ CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <div class="modal-section-title">📋 Quản lý bảng tính</div>
+                    <div class="modal-buttons">
+                        <button class="modal-btn btn-new" id="btnNew">
+                            ➕ Tạo bảng mới
+                        </button>
+                    </div>
+                    <div id="sheetList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" class="file-input" accept=".csv" />
+
+    <script>
+        let rows = [{ id: 1, name: '', l1: 0, l2: 0, l3: 0, l4: 0, l5: 0, volume: 0, marked: false }];
+        let currentSheet = { id: 'default', name: 'Bảng Tính Mới' };
+        let autoSaveTimer = null;
+        let isKeyboardVisible = false;
+        let currentRowIndex = 0; // Theo dõi hàng hiện tại
+        
+        const DB_NAME = 'SpreadsheetDB';
+        const STORE_NAME = 'spreadsheets';
+
+        // IndexedDB functions
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function saveToIndexedDB(id, name, data) {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put({ 
+                    id, 
+                    name, 
+                    data: JSON.parse(JSON.stringify(data)),
+                    updatedAt: new Date().toISOString() 
+                });
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadFromIndexedDB(id) {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(id);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getAllSpreadsheets() {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteFromIndexedDB(id) {
+            const db = await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Calculation functions
+        function calculateTotal(row) {
+            return (parseFloat(row.l1) || 0) + (parseFloat(row.l2) || 0) + 
+                   (parseFloat(row.l3) || 0) + (parseFloat(row.l4) || 0) + 
+                   (parseFloat(row.l5) || 0);
+        }
+
+        function formatNumber(num) {
+            const value = parseFloat(num) || 0;
+            return value.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+        }
+
+        function updateAllTotals() {
+            const totals = {
+                l1: 0, l2: 0, l3: 0, l4: 0, l5: 0,
+                volume: 0, grand: 0
+            };
+            
+            rows.forEach(row => {
+                totals.l1 += parseFloat(row.l1) || 0;
+                totals.l2 += parseFloat(row.l2) || 0;
+                totals.l3 += parseFloat(row.l3) || 0;
+                totals.l4 += parseFloat(row.l4) || 0;
+                totals.l5 += parseFloat(row.l5) || 0;
+                totals.volume += parseFloat(row.volume) || 0;
+                totals.grand += calculateTotal(row);
+            });
+            
+            document.getElementById('totalL1').textContent = formatNumber(totals.l1);
+            document.getElementById('totalL2').textContent = formatNumber(totals.l2);
+            document.getElementById('totalL3').textContent = formatNumber(totals.l3);
+            document.getElementById('totalL4').textContent = formatNumber(totals.l4);
+            document.getElementById('totalL5').textContent = formatNumber(totals.l5);
+            document.getElementById('totalVolume').textContent = formatNumber(totals.volume);
+            document.getElementById('grandTotal').textContent = formatNumber(totals.grand);
+            document.getElementById('totalRows').textContent = rows.length;
+        }
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            rows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                if (row.marked) {
+                    tr.classList.add('marked');
+                }
+                
+                // STT
+                let td = document.createElement('td');
+                td.textContent = index + 1;
+                tr.appendChild(td);
+                
+                // Tên
+                td = document.createElement('td');
+                td.className = 'name-cell';
+                let input = document.createElement('input');
+                input.type = 'text';
+                input.value = row.name;
+                input.dataset.rowId = row.id;
+                input.dataset.field = 'name';
+                input.dataset.rowIndex = index;
+                input.placeholder = 'Nhập tên...';
+                input.autocomplete = 'off';
+                input.oninput = function() {
+                    updateField(this.dataset.rowId, this.dataset.field, this.value);
+                };
+                input.onkeydown = handleKeyNavigation;
+                input.onfocus = function() {
+                    currentRowIndex = parseInt(this.dataset.rowIndex);
+                    handleInputFocus();
+                };
+                input.onblur = handleInputBlur;
+                td.appendChild(input);
+                tr.appendChild(td);
+                
+                // Cấp 1-5
+                ['l1', 'l2', 'l3', 'l4', 'l5'].forEach(field => {
+                    let td = document.createElement('td');
+                    let input = document.createElement('input');
+                    input.type = 'number';
+                    input.inputMode = 'decimal';
+                    input.min = '0';
+                    input.step = 'any';
+                    input.value = row[field] || '';
+                    input.dataset.rowId = row.id;
+                    input.dataset.field = field;
+                    input.dataset.rowIndex = index;
+                    input.placeholder = '0';
+                    input.autocomplete = 'off';
+                    input.oninput = function() {
+                        updateField(this.dataset.rowId, this.dataset.field, this.value);
+                    };
+                    input.onkeydown = handleKeyNavigation;
+                    input.onfocus = function() {
+                        currentRowIndex = parseInt(this.dataset.rowIndex);
+                        this.select();
+                        handleInputFocus();
+                    };
+                    input.onblur = handleInputBlur;
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                });
+                
+                // Tổng
+                td = document.createElement('td');
+                td.className = 'col-total';
+                td.textContent = formatNumber(calculateTotal(row));
+                tr.appendChild(td);
+                
+                // Khối lượng
+                td = document.createElement('td');
+                input = document.createElement('input');
+                input.type = 'number';
+                input.inputMode = 'decimal';
+                input.min = '0';
+                input.step = 'any';
+                input.value = row.volume || '';
+                input.dataset.rowId = row.id;
+                input.dataset.field = 'volume';
+                input.dataset.rowIndex = index;
+                input.placeholder = '0';
+                input.autocomplete = 'off';
+                input.oninput = function() {
+                    updateField(this.dataset.rowId, this.dataset.field, this.value);
+                };
+                input.onkeydown = handleKeyNavigation;
+                input.onfocus = function() {
+                    currentRowIndex = parseInt(this.dataset.rowIndex);
+                    this.select();
+                    handleInputFocus();
+                };
+                input.onblur = handleInputBlur;
+                td.appendChild(input);
+                tr.appendChild(td);
+                
+                // Đánh dấu
+                td = document.createElement('td');
+                const btnMark = document.createElement('button');
+                btnMark.className = 'btn-mark';
+                btnMark.textContent = row.marked ? '⭐' : '☆';
+                btnMark.title = row.marked ? 'Bỏ đánh dấu' : 'Đánh dấu';
+                if (row.marked) {
+                    btnMark.classList.add('active');
+                }
+                btnMark.onclick = function() {
+                    toggleMark(row.id);
+                };
+                td.appendChild(btnMark);
+                tr.appendChild(td);
+                
+                tbody.appendChild(tr);
+            });
+            
+            updateAllTotals();
+        }
+
+        // Handle keyboard visibility
+        function handleInputFocus() {
+            isKeyboardVisible = true;
+            const footer = document.getElementById('footer');
+            footer.classList.add('keyboard-active');
+        }
+
+        function handleInputBlur() {
+            setTimeout(() => {
+                if (!document.activeElement || document.activeElement.tagName !== 'INPUT') {
+                    isKeyboardVisible = false;
+                    const footer = document.getElementById('footer');
+                    footer.classList.remove('keyboard-active');
+                }
+            }, 100);
+        }
+
+        // Toggle mark
+        function toggleMark(rowId) {
+            const row = rows.find(r => r.id == rowId);
+            if (row) {
+                row.marked = !row.marked;
+                renderTable();
+                scheduleAutoSave();
+            }
+        }
+
+        // Keyboard navigation
+        function handleKeyNavigation(e) {
+            const input = e.target;
+            const rowId = input.dataset.rowId;
+            const field = input.dataset.field;
+            const rowIndex = parseInt(input.dataset.rowIndex);
+            
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                
+                const fields = ['name', 'l1', 'l2', 'l3', 'l4', 'l5', 'volume'];
+                const currentIndex = fields.indexOf(field);
+                
+                if (currentIndex < fields.length - 1) {
+                    const nextField = fields[currentIndex + 1];
+                    const nextInput = document.querySelector(`input[data-row-id="${rowId}"][data-field="${nextField}"]`);
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.select();
+                    }
+                } else {
+                    const currentRowIndex = rows.findIndex(r => r.id == rowId);
+                    if (currentRowIndex < rows.length - 1) {
+                        const nextRow = rows[currentRowIndex + 1];
+                        const firstInput = document.querySelector(`input[data-row-id="${nextRow.id}"][data-field="name"]`);
+                        if (firstInput) {
+                            firstInput.focus();
+                            firstInput.select();
+                        }
+                    } else {
+                        addRow();
+                        setTimeout(() => {
+                            const lastRowId = Math.max(...rows.map(r => r.id));
+                            const firstInput = document.querySelector(`input[data-row-id="${lastRowId}"][data-field="name"]`);
+                            if (firstInput) {
+                                firstInput.focus();
+                                firstInput.select();
+                            }
+                        }, 50);
+                    }
+                }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                
+                const fields = ['name', 'l1', 'l2', 'l3', 'l4', 'l5', 'volume'];
+                const currentIndex = fields.indexOf(field);
+                
+                if (e.shiftKey) {
+                    if (currentIndex > 0) {
+                        const prevField = fields[currentIndex - 1];
+                        const prevInput = document.querySelector(`input[data-row-id="${rowId}"][data-field="${prevField}"]`);
+                        if (prevInput) {
+                            prevInput.focus();
+                            prevInput.select();
+                        }
+                    } else {
+                        const currentRowIndex = rows.findIndex(r => r.id == rowId);
+                        if (currentRowIndex > 0) {
+                            const prevRow = rows[currentRowIndex - 1];
+                            const lastInput = document.querySelector(`input[data-row-id="${prevRow.id}"][data-field="volume"]`);
+                            if (lastInput) {
+                                lastInput.focus();
+                                lastInput.select();
+                            }
+                        }
+                    }
+                } else {
+                    if (currentIndex < fields.length - 1) {
+                        const nextField = fields[currentIndex + 1];
+                        const nextInput = document.querySelector(`input[data-row-id="${rowId}"][data-field="${nextField}"]`);
+                        if (nextInput) {
+                            nextInput.focus();
+                            nextInput.select();
+                        }
+                    } else {
+                        const currentRowIndex = rows.findIndex(r => r.id == rowId);
+                        if (currentRowIndex < rows.length - 1) {
+                            const nextRow = rows[currentRowIndex + 1];
+                            const firstInput = document.querySelector(`input[data-row-id="${nextRow.id}"][data-field="name"]`);
+                            if (firstInput) {
+                                firstInput.focus();
+                                firstInput.select();
+                            }
+                        }
+                    }
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const currentRowIndex = rows.findIndex(r => r.id == rowId);
+                if (currentRowIndex < rows.length - 1) {
+                    const nextRow = rows[currentRowIndex + 1];
+                    const nextInput = document.querySelector(`input[data-row-id="${nextRow.id}"][data-field="${field}"]`);
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.select();
+                    }
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const currentRowIndex = rows.findIndex(r => r.id == rowId);
+                if (currentRowIndex > 0) {
+                    const prevRow = rows[currentRowIndex - 1];
+                    const prevInput = document.querySelector(`input[data-row-id="${prevRow.id}"][data-field="${field}"]`);
+                    if (prevInput) {
+                        prevInput.focus();
+                        prevInput.select();
+                    }
+                }
+            }
+        }
+
+        // Update field and trigger auto-save
+        function updateField(rowId, field, value) {
+            const row = rows.find(r => r.id == rowId);
+            if (row) {
+                if (['l1', 'l2', 'l3', 'l4', 'l5', 'volume'].includes(field)) {
+                    const numValue = parseFloat(value);
+                    row[field] = isNaN(numValue) ? 0 : Math.max(0, numValue);
+                } else {
+                    row[field] = value;
+                }
+                
+                const rowEl = document.querySelector(`input[data-row-id="${rowId}"][data-field="${field}"]`);
+                if (rowEl && rowEl.closest('tr')) {
+                    const totalCell = rowEl.closest('tr').querySelector('.col-total');
+                    if (totalCell) {
+                        totalCell.textContent = formatNumber(calculateTotal(row));
+                    }
+                }
+                
+                updateAllTotals();
+                scheduleAutoSave();
+            }
+        }
+
+        // Auto-save with debounce
+        function scheduleAutoSave() {
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            autoSaveTimer = setTimeout(() => {
+                saveSheet(true);
+            }, 2000);
+        }
+
+        // Row operations
+        function addRow() {
+            const newId = Math.max(...rows.map(r => r.id), 0) + 1;
+            rows.push({ id: newId, name: '', l1: 0, l2: 0, l3: 0, l4: 0, l5: 0, volume: 0, marked: false });
+            renderTable();
+            currentRowIndex = rows.length - 1;
+        }
+
+        function insertRow() {
+            if (currentRowIndex >= 0 && currentRowIndex < rows.length) {
+                const newId = Math.max(...rows.map(r => r.id), 0) + 1;
+                const newRow = { id: newId, name: '', l1: 0, l2: 0, l3: 0, l4: 0, l5: 0, volume: 0, marked: false };
+                rows.splice(currentRowIndex + 1, 0, newRow);
+                renderTable();
+                currentRowIndex++;
+                
+                setTimeout(() => {
+                    const newInput = document.querySelector(`input[data-row-id="${newId}"][data-field="name"]`);
+                    if (newInput) {
+                        newInput.focus();
+                        newInput.select();
+                    }
+                }, 50);
+            } else {
+                addRow();
+            }
+        }
+
+        function deleteRow() {
+            if (rows.length <= 1) {
+                showNotification('⚠️ Không thể xóa dòng cuối cùng!');
+                return;
+            }
+            
+            if (currentRowIndex >= 0 && currentRowIndex < rows.length) {
+                if (confirm('Bạn có chắc muốn xóa dòng này?')) {
+                    rows.splice(currentRowIndex, 1);
+                    if (currentRowIndex >= rows.length) {
+                        currentRowIndex = rows.length - 1;
+                    }
+                    renderTable();
+                    showNotification('✅ Đã xóa dòng');
+                }
+            } else {
+                showNotification('⚠️ Không tìm thấy dòng để xóa!');
+            }
+        }
+
+        // Sheet operations
+        function renameSheet() {
+            const newName = prompt('Nhập tên mới cho bảng tính:', currentSheet.name);
+            if (newName && newName.trim()) {
+                currentSheet.name = newName.trim();
+                document.getElementById('sheetName').textContent = newName.trim();
+                showNotification('✅ Đã đổi tên thành công!');
+            }
+        }
+
+        async function saveSheet(isAutoSave = false) {
+            try {
+                const saveBtn = document.getElementById('btnSave');
+                if (!isAutoSave) {
+                    saveBtn.innerHTML = '<span class="loading"></span> Đang lưu...';
+                    saveBtn.disabled = true;
+                }
+                
+                await saveToIndexedDB(currentSheet.id, currentSheet.name, rows);
+                
+                if (!isAutoSave) {
+                    saveBtn.innerHTML = '💾 Lưu bảng tính';
+                    saveBtn.disabled = false;
+                    showNotification('✅ Đã lưu thành công!');
+                    closeModal();
+                }
+            } catch (error) {
+                console.error('Lỗi lưu:', error);
+                showNotification('❌ Lưu thất bại!');
+                if (!isAutoSave) {
+                    document.getElementById('btnSave').innerHTML = '💾 Lưu bảng tính';
+                    document.getElementById('btnSave').disabled = false;
+                }
+            }
+        }
+
+        async function loadSheet(id) {
+            try {
+                const sheet = await loadFromIndexedDB(id);
+                if (sheet) {
+                    currentSheet = { id: sheet.id, name: sheet.name };
+                    rows = sheet.data.map(row => ({
+                        ...row,
+                        marked: row.marked || false
+                    }));
+                    document.getElementById('sheetName').textContent = sheet.name;
+                    renderTable();
+                    closeModal();
+                    showNotification('✅ Đã tải bảng tính');
+                }
+            } catch (error) {
+                console.error('Lỗi tải:', error);
+                showNotification('❌ Lỗi khi tải bảng tính!');
+            }
+        }
+
+        function createNewSheet() {
+            const name = prompt('Nhập tên bảng tính mới:');
+            if (name && name.trim()) {
+                currentSheet = { id: Date.now().toString(), name: name.trim() };
+                rows = [{ id: 1, name: '', l1: 0, l2: 0, l3: 0, l4: 0, l5: 0, volume: 0, marked: false }];
+                document.getElementById('sheetName').textContent = name.trim();
+                renderTable();
+                closeModal();
+                showNotification('✅ Đã tạo bảng tính mới');
+            }
+        }
+
+        async function deleteSheet(id) {
+            if (confirm('Bạn có chắc muốn xóa bảng tính này?')) {
+                try {
+                    await deleteFromIndexedDB(id);
+                    if (currentSheet.id === id) {
+                        currentSheet = { id: 'default', name: 'Bảng Tính Mới' };
+                        rows = [{ id: 1, name: '', l1: 0, l2: 0, l3: 0, l4: 0, l5: 0, volume: 0, marked: false }];
+                        document.getElementById('sheetName').textContent = 'Bảng Tính Mới';
+                        renderTable();
+                    }
+                    await loadSheetList();
+                    showNotification('✅ Đã xóa bảng tính');
+                } catch (error) {
+                    console.error('Lỗi xóa:', error);
+                    showNotification('❌ Lỗi khi xóa!');
+                }
+            }
+        }
+
+        async function loadSheetList() {
+            try {
+                const sheets = await getAllSpreadsheets();
+                const listDiv = document.getElementById('sheetList');
+                
+                if (sheets.length === 0) {
+                    listDiv.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📂</div>
+                            <div class="empty-state-text">Chưa có bảng tính nào</div>
+                        </div>
+                    `;
+                } else {
+                    listDiv.innerHTML = '';
+                    sheets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                    
+                    sheets.forEach(sheet => {
+                        const item = document.createElement('div');
+                        item.className = 'sheet-item';
+                        
+                        const info = document.createElement('div');
+                        info.className = 'sheet-info';
+                        info.innerHTML = `
+                            <div class="sheet-name">${sheet.name}</div>
+                            <div class="sheet-date">${new Date(sheet.updatedAt).toLocaleString('vi-VN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</div>
+                        `;
+                        info.onclick = function() {
+                            loadSheet(sheet.id);
+                        };
+                        
+                        const btnDel = document.createElement('button');
+                        btnDel.className = 'btn-delete';
+                        btnDel.textContent = '🗑️';
+                        btnDel.title = 'Xóa bảng tính';
+                        btnDel.onclick = function(e) {
+                            e.stopPropagation();
+                            deleteSheet(sheet.id);
+                        };
+                        
+                        item.appendChild(info);
+                        item.appendChild(btnDel);
+                        listDiv.appendChild(item);
+                    });
+                }
+            } catch (error) {
+                console.error('Lỗi tải danh sách:', error);
+            }
+        }
+
+        // Modal operations
+        function openModal() {
+            document.getElementById('modal').classList.add('active');
+            loadSheetList();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // Export CSV
+        function exportCSV() {
+            const headers = ['STT', 'Tên Mục', 'Cấp 1', 'Cấp 2', 'Cấp 3', 'Cấp 4', 'Cấp 5', 'Tổng', 'Khối lượng'];
+            const csvData = [
+                headers.join(','),
+                ...rows.map((row, index) => [
+                    index + 1,
+                    `"${row.name}"`,
+                    row.l1 || 0, 
+                    row.l2 || 0, 
+                    row.l3 || 0, 
+                    row.l4 || 0, 
+                    row.l5 || 0,
+                    calculateTotal(row),
+                    row.volume || 0
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob(['\ufeff' + csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentSheet.name}_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            showNotification('📥 Đã xuất file CSV!');
+            closeModal();
+        }
+
+        // Import CSV
+        function importFromFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const parsedData = parseCSV(content);
+                    
+                    if (parsedData.length > 0) {
+                        const shouldReplace = confirm(`Tìm thấy ${parsedData.length} dòng dữ liệu.\n\nNhấn OK để THAY THẾ dữ liệu hiện tại\nNhấn Cancel để THÊM VÀO cuối`);
+                        
+                        if (shouldReplace) {
+                            rows = parsedData;
+                            let newId = 1;
+                            rows.forEach(row => {
+                                row.id = newId++;
+                            });
+                        } else {
+                            const maxId = Math.max(...rows.map(r => r.id), 0);
+                            let newId = maxId + 1;
+                            parsedData.forEach(row => {
+                                rows.push({
+                                    id: newId++,
+                                    name: row.name || '',
+                                    l1: parseFloat(row.l1) || 0,
+                                    l2: parseFloat(row.l2) || 0,
+                                    l3: parseFloat(row.l3) || 0,
+                                    l4: parseFloat(row.l4) || 0,
+                                    l5: parseFloat(row.l5) || 0,
+                                    volume: parseFloat(row.volume) || 0
+                                });
+                            });
+                        }
+                        
+                        renderTable();
+                        showNotification(`✅ Đã nhập ${parsedData.length} dòng từ file!`);
+                        closeModal();
+                    } else {
+                        showNotification('❌ Không tìm thấy dữ liệu hợp lệ!');
+                    }
+                } catch (error) {
+                    console.error('Lỗi nhập file:', error);
+                    showNotification('❌ Lỗi khi đọc file!');
+                }
+            };
+
+            reader.readAsText(file, 'UTF-8');
+            event.target.value = '';
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim());
+            const result = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                const regex = /(?:,|^)(?:"([^"]*(?:""[^"]*)*)"|([^",]*))/g;
+                const fields = [];
+                let match;
+                
+                while ((match = regex.exec(line + ',')) !== null) {
+                    let value = match[1] !== undefined ? match[1].replace(/""/g, '"') : match[2];
+                    fields.push(value || '');
+                }
+                
+                if (fields.length >= 8) {
+                    result.push({
+                        id: i,
+                        name: fields[1] || '',
+                        l1: parseFloat(fields[2]) || 0,
+                        l2: parseFloat(fields[3]) || 0,
+                        l3: parseFloat(fields[4]) || 0,
+                        l4: parseFloat(fields[5]) || 0,
+                        l5: parseFloat(fields[6]) || 0,
+                        volume: parseFloat(fields[8]) || 0
+                    });
+                }
+            }
+            
+            return result;
+        }
+
+        // Notification
+        function showNotification(message) {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2500);
+        }
+
+        // Initialize app
+        async function init() {
+            try {
+                const sheet = await loadFromIndexedDB('default');
+                if (sheet) {
+                    currentSheet = { id: sheet.id, name: sheet.name };
+                    rows = sheet.data;
+                    document.getElementById('sheetName').textContent = sheet.name;
+                }
+            } catch (error) {
+                console.error('Lỗi khởi tạo:', error);
+            }
+            
+            renderTable();
+            
+            document.getElementById('sheetName').onclick = renameSheet;
+            document.getElementById('btnAddRow').onclick = addRow;
+            document.getElementById('btnInsert').onclick = insertRow;
+            document.getElementById('btnDelete').onclick = deleteRow;
+            document.getElementById('btnSave').onclick = () => saveSheet(false);
+            document.getElementById('btnMenu').onclick = openModal;
+            document.getElementById('btnExport').onclick = exportCSV;
+            document.getElementById('btnImport').onclick = importFromFile;
+            document.getElementById('fileInput').onchange = handleFileImport;
+            document.getElementById('modalClose').onclick = closeModal;
+            document.getElementById('btnNew').onclick = createNewSheet;
+            
+            document.getElementById('modal').onclick = function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            };
+            
+            window.addEventListener('beforeunload', function(e) {
+                if (autoSaveTimer) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

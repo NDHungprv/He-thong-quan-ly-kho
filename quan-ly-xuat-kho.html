@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Xuất Kho</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .form-section {
+            padding: 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5ee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: #4facfe;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 25px 0 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-reset {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5ee;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 0 20px 20px;
+            display: none;
+        }
+        
+        .result-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .result-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #4facfe;
+        }
+        
+        .history-section {
+            margin-top: 20px;
+            border-top: 1px solid #e1e5ee;
+            padding-top: 20px;
+        }
+        
+        .history-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4facfe;
+            font-size: 14px;
+        }
+        
+        .empty-result {
+            text-align: center;
+            color: #999;
+            padding: 30px 20px;
+            display: none;
+        }
+        
+        .empty-result i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #e1e5ee;
+        }
+        
+        /* Tối ưu cho các kích thước màn hình nhỏ hơn */
+        @media (max-width: 380px) {
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .form-section {
+                padding: 15px;
+            }
+            
+            .result-section {
+                margin: 0 15px 15px;
+                padding: 15px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                padding: 14px;
+            }
+        }
+        
+        /* Hiệu ứng cho các nút khi chạm */
+        @media (hover: none) {
+            button:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Quản Lý Xuất Kho</h1>
+            <p>Nhập thông tin hàng hóa và số lượng xuất để tính toán</p>
+        </div>
+        
+        <div class="form-section">
+            <div class="input-group">
+                <label for="initialQuantity">Số lượng ban đầu</label>
+                <input type="number" id="initialQuantity" placeholder="Nhập số lượng ban đầu" min="0" step="any">
+                <div class="error-message" id="quantityError"></div>
+            </div>
+            
+            <div class="input-group">
+                <label for="initialWeight">Khối lượng ban đầu</label>
+                <input type="number" id="initialWeight" placeholder="Nhập khối lượng ban đầu" min="0" step="any">
+                <div class="error-message" id="weightError"></div>
+            </div>
+            
+            <div class="input-group">
+                <label for="exportQuantity">Số lượng xuất</label>
+                <input type="number" id="exportQuantity" placeholder="Nhập số lượng xuất" min="0" step="any">
+                <div class="error-message" id="exportError"></div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-calculate" id="calculateBtn">Tính Toán</button>
+                <button class="btn-reset" id="resetBtn">Nhập Lại</button>
+            </div>
+            
+            <div class="result-section" id="resultSection">
+                <div class="result-title">Kết Quả Sau Khi Xuất</div>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-label">Số lượng còn lại</div>
+                        <div class="result-value" id="remainingQuantity">0</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Khối lượng còn lại</div>
+                        <div class="result-value" id="remainingWeight">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="empty-result" id="emptyResult">
+                <i>📊</i>
+                <p>Kết quả sẽ hiển thị ở đây sau khi tính toán</p>
+            </div>
+            
+            <div class="history-section">
+                <div class="history-title">Lịch Sử Tính Toán</div>
+                <div class="history-list" id="historyList">
+                    <!-- Lịch sử sẽ được thêm vào đây bằng JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lấy các phần tử DOM
+            const initialQuantityInput = document.getElementById('initialQuantity');
+            const initialWeightInput = document.getElementById('initialWeight');
+            const exportQuantityInput = document.getElementById('exportQuantity');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const resultSection = document.getElementById('resultSection');
+            const emptyResult = document.getElementById('emptyResult');
+            const remainingQuantity = document.getElementById('remainingQuantity');
+            const remainingWeight = document.getElementById('remainingWeight');
+            const historyList = document.getElementById('historyList');
+            
+            // Lấy các phần tử thông báo lỗi
+            const quantityError = document.getElementById('quantityError');
+            const weightError = document.getElementById('weightError');
+            const exportError = document.getElementById('exportError');
+            
+            // Mảng lưu lịch sử tính toán
+            let calculationHistory = [];
+            
+            // Hiển thị placeholder khi chưa có kết quả
+            emptyResult.style.display = 'block';
+            
+            // Hàm kiểm tra số chữ số thập phân
+            function getDecimalPlaces(value) {
+                if (!value || value === '' || isNaN(value)) return 0;
+                
+                // Chuyển giá trị thành chuỗi
+                const valueStr = value.toString();
+                
+                // Kiểm tra xem có dấu chấm thập phân không
+                if (valueStr.includes('.')) {
+                    // Trả về số chữ số sau dấu chấm
+                    return valueStr.split('.')[1].length;
+                }
+                
+                return 0;
+            }
+            
+            // Hàm làm tròn số theo số chữ số thập phân
+            function roundToDecimal(value, decimalPlaces) {
+                if (decimalPlaces <= 0) return Math.round(value);
+                const factor = Math.pow(10, decimalPlaces);
+                return Math.round(value * factor) / factor;
+            }
+            
+            // Hàm xác định số chữ số thập phân để làm tròn kết quả
+            function getResultDecimalPlaces(input1, input2) {
+                // Lấy số chữ số thập phân lớn nhất từ 2 giá trị
+                const decimal1 = getDecimalPlaces(input1);
+                const decimal2 = getDecimalPlaces(input2);
+                const maxDecimal = Math.max(decimal1, decimal2);
+                
+                // Trả về số chữ số thập phân lớn nhất cộng thêm 1
+                return maxDecimal + 1;
+            }
+            
+            // Hàm kiểm tra dữ liệu đầu vào
+            function validateInputs() {
+                let isValid = true;
+                
+                // Reset thông báo lỗi
+                quantityError.style.display = 'none';
+                weightError.style.display = 'none';
+                exportError.style.display = 'none';
+                
+                // Kiểm tra số lượng ban đầu
+                const initialQuantity = parseFloat(initialQuantityInput.value);
+                if (isNaN(initialQuantity) || initialQuantity < 0) {
+                    quantityError.textContent = 'Vui lòng nhập số lượng hợp lệ (≥ 0)';
+                    quantityError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                // Kiểm tra khối lượng ban đầu
+                const initialWeight = parseFloat(initialWeightInput.value);
+                if (isNaN(initialWeight) || initialWeight < 0) {
+                    weightError.textContent = 'Vui lòng nhập khối lượng hợp lệ (≥ 0)';
+                    weightError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                // Kiểm tra số lượng xuất
+                const exportQuantity = parseFloat(exportQuantityInput.value);
+                if (isNaN(exportQuantity) || exportQuantity < 0) {
+                    exportError.textContent = 'Vui lòng nhập số lượng xuất hợp lệ (≥ 0)';
+                    exportError.style.display = 'block';
+                    isValid = false;
+                } else if (exportQuantity > initialQuantity) {
+                    exportError.textContent = 'Số lượng xuất không được lớn hơn số lượng ban đầu';
+                    exportError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            // Hàm tính toán kết quả
+            function calculateResult() {
+                if (!validateInputs()) {
+                    return;
+                }
+                
+                const initialQuantity = parseFloat(initialQuantityInput.value);
+                const initialWeight = parseFloat(initialWeightInput.value);
+                const exportQuantity = parseFloat(exportQuantityInput.value);
+                
+                // Tính toán số lượng và khối lượng còn lại
+                const remainingQty = initialQuantity - exportQuantity;
+                // Tính khối lượng còn lại dựa trên tỷ lệ
+                const remainingWgt = initialWeight - (exportQuantity / initialQuantity) * initialWeight;
+                
+                // Xác định số chữ số thập phân để làm tròn kết quả
+                const quantityDecimalPlaces = getResultDecimalPlaces(initialQuantityInput.value, exportQuantityInput.value);
+                const weightDecimalPlaces = getResultDecimalPlaces(initialWeightInput.value, exportQuantityInput.value);
+                
+                // Làm tròn kết quả
+                const roundedRemainingQty = roundToDecimal(remainingQty, quantityDecimalPlaces);
+                const roundedRemainingWgt = roundToDecimal(remainingWgt, weightDecimalPlaces);
+                
+                // Hiển thị kết quả đã làm tròn
+                remainingQuantity.textContent = roundedRemainingQty;
+                remainingWeight.textContent = roundedRemainingWgt;
+                
+                // Hiển thị container kết quả và ẩn placeholder
+                resultSection.classList.add('active');
+                emptyResult.style.display = 'none';
+                
+                // Tự động cuộn đến kết quả
+                setTimeout(function() {
+                    resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+                
+                // Thêm vào lịch sử
+                addToHistory(initialQuantity, initialWeight, exportQuantity, roundedRemainingQty, roundedRemainingWgt);
+            }
+            
+            // Hàm thêm vào lịch sử
+            function addToHistory(initQty, initWgt, exportQty, remainQty, remainWgt) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('vi-VN');
+                
+                const historyItem = {
+                    time: timeString,
+                    initialQuantity: initQty,
+                    initialWeight: initWgt,
+                    exportQuantity: exportQty,
+                    remainingQuantity: remainQty,
+                    remainingWeight: remainWgt
+                };
+                
+                calculationHistory.unshift(historyItem);
+                
+                // Giới hạn lịch sử 5 mục
+                if (calculationHistory.length > 5) {
+                    calculationHistory.pop();
+                }
+                
+                // Cập nhật hiển thị lịch sử
+                updateHistoryDisplay();
+            }
+            
+            // Hàm cập nhật hiển thị lịch sử
+            function updateHistoryDisplay() {
+                historyList.innerHTML = '';
+                
+                calculationHistory.forEach(item => {
+                    const historyElement = document.createElement('div');
+                    historyElement.className = 'history-item';
+                    historyElement.innerHTML = `
+                        <div><strong>${item.time}</strong></div>
+                        <div>Ban đầu: ${item.initialQuantity} (${item.initialWeight}kg)</div>
+                        <div>Xuất: ${item.exportQuantity} → Còn lại: ${item.remainingQuantity} (${item.remainingWeight}kg)</div>
+                    `;
+                    historyList.appendChild(historyElement);
+                });
+                
+                // Hiển thị thông báo nếu không có lịch sử
+                if (calculationHistory.length === 0) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'history-item';
+                    emptyMessage.textContent = 'Chưa có lịch sử tính toán';
+                    emptyMessage.style.textAlign = 'center';
+                    emptyMessage.style.color = '#999';
+                    historyList.appendChild(emptyMessage);
+                }
+            }
+            
+            // Hàm reset form
+            function resetForm() {
+                initialQuantityInput.value = '';
+                initialWeightInput.value = '';
+                exportQuantityInput.value = '';
+                
+                quantityError.style.display = 'none';
+                weightError.style.display = 'none';
+                exportError.style.display = 'none';
+                
+                resultSection.classList.remove('active');
+                emptyResult.style.display = 'block';
+                
+                // Focus vào ô đầu tiên
+                initialQuantityInput.focus();
+            }
+            
+            // Gán sự kiện cho các nút
+            calculateBtn.addEventListener('click', calculateResult);
+            resetBtn.addEventListener('click', resetForm);
+            
+            // Cho phép tính toán bằng phím Enter
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    calculateResult();
+                }
+            });
+            
+            // Khởi tạo hiển thị lịch sử
+            updateHistoryDisplay();
+        });
+    </script>
+</body>
+</html>
