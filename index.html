@@ -5,220 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý Kho - Trang Chủ</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        /* GIỮ NGUYÊN CSS CŨ VÀ THÊM CÁC STYLE MỚI */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 40px; padding: 30px 20px; }
+        .apps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 40px; }
         
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+        /* App Card */
+        .app-card { background: white; border-radius: 15px; padding: 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: all 0.3s ease; position: relative; border: 3px solid transparent; }
+        .app-card:hover { transform: translateY(-10px); border-color: #4facfe; }
+        .app-icon { font-size: 4rem; margin-bottom: 20px; display: block; }
+        .btn-launch { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-            padding: 30px 20px;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-        
-        .app-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 3px solid transparent;
-        }
-        
-        .app-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            border-color: #4facfe;
-        }
-        
-        .app-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            display: block;
-        }
-        
-        .app-card h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
-        
-        .app-card p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .app-features {
-            text-align: left;
-            margin: 20px 0;
-        }
-        
-        .app-features li {
-            margin-bottom: 8px;
-            color: #555;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .app-features li:before {
-            content: "✓";
-            color: #4facfe;
-            font-weight: bold;
-            position: absolute;
-            left: 0;
-        }
-        
-        .btn-launch {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-launch:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
-        }
-        
-        .footer {
-            text-align: center;
-            color: white;
-            padding: 30px 20px;
-            margin-top: 40px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .footer p {
-            opacity: 0.8;
-        }
-        
-        @media (max-width: 768px) {
-            .apps-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-        }
+        /* Nút Xóa App */
+        .btn-delete { position: absolute; top: 10px; right: 10px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; display: none; }
+        .app-card:hover .btn-delete { display: block; }
+
+        /* Nút "Thêm Mới" Card */
+        .add-card { background: rgba(255, 255, 255, 0.2); border: 3px dashed white; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; cursor: pointer; min-height: 300px; border-radius: 15px; transition: 0.3s; }
+        .add-card:hover { background: rgba(255, 255, 255, 0.3); }
+        .add-card span { font-size: 5rem; }
+
+        /* Modal (Bảng nhập liệu) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 15px; width: 400px; }
+        .modal-content h2 { margin-bottom: 20px; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .modal-btns { display: flex; gap: 10px; }
+        .btn-save { background: #28a745; color: white; border: none; padding: 10px; flex: 1; border-radius: 5px; cursor: pointer; }
+        .btn-cancel { background: #6c757d; color: white; border: none; padding: 10px; flex: 1; border-radius: 5px; cursor: pointer; }
+
+        .footer { text-align: center; color: white; margin-top: 40px; opacity: 0.8; }
     </style>
 </head>
 <body>
+
     <div class="container">
         <div class="header">
             <h1>🏭 Hệ Thống Quản Lý Kho Thông Minh</h1>
-            <p>Công cụ toàn diện cho quản lý kho</p>
+            <p>Bảng điều khiển quản lý tập trung</p>
         </div>
         
-        <div class="apps-grid">
-            <!-- App 1: Thông gió nhà kho -->
-            <div class="app-card" onclick="navigateTo('thong-gio-nha-kho.html')">
-                <span class="app-icon">🌬️</span>
-                <h2>Thông Gió Nhà Kho</h2>
-                <p>Nhập nhiệt độ, độ ẩm để tính nhiệt độ điểm sương, độ ẩm tuyệt đối</p>
-                
-                <div class="app-features">
-                    <li>Kết nối Bluetooth với thiết bị đo</li>
-                    <li>Đánh giá điều kiện thông gió tự động</li>
-                    <li>Hỗ trợ đa nền tảng (iOS/Android)</li>
-                </div>
-                
-                <a href="thong-gio-nha-kho.html" class="btn-launch">Mở Ứng Dụng</a>
+        <div id="appsGrid" class="apps-grid">
             </div>
-            
-            <!-- App 2: Bảng tính di động -->
-            <div class="app-card" onclick="navigateTo('bang-tinh-di-dong.html')">
-                <span class="app-icon">📊</span>
-                <h2>Bảng Tính Di Động</h2>
-                <p>Tính tổng số lượng, khối lượng theo cấp</p>
-                
-                <div class="app-features">
-                    <li>Quản lý nhiều bảng tính cùng lúc</li>
-                    <li>Lưu trữ trên điện thoại</li>
-                    <li>Import/Export file CSV</li>
-                    <li>Tính toán tự động & đánh dấu</li>
-                </div>
-                
-                <a href="bang-tinh-di-dong.html" class="btn-launch">Mở Ứng Dụng</a>
-            </div>
-            
-            <!-- App 3: Quản lý xuất kho -->
-            <div class="app-card" onclick="navigateTo('quan-ly-xuat-kho.html')">
-                <span class="app-icon">📦</span>
-                <h2>Quản Lý Xuất Kho</h2>
-                <p>Theo dõi và tính toán tồn kho sau mỗi lần xuất hàng</p>
-                
-                <div class="app-features">
-                    <li>Tính toán số lượng & khối lượng tồn</li>
-                    <li>Lưu lịch sử xuất kho tự động</li>
-                </div>
-                
-                <a href="quan-ly-xuat-kho.html" class="btn-launch">Mở Ứng Dụng</a>
-            </div>
-        </div>
-        
+
         <div class="footer">
-            <p>© 2025 - Hệ thống phát triển bởi NDH | Phiên bản 1.0</p>
-            <p>📧 Liên hệ: dinhhunggl2015@gmail.com </p>
+            <p>© 2025 - Phát triển bởi NDH | Phiên bản 2.0</p>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h2>Thêm Ứng Dụng Mới</h2>
+            <input type="text" id="appIcon" placeholder="Biểu tượng (Ví dụ: 📈, ⚙️)">
+            <input type="text" id="appTitle" placeholder="Tên ứng dụng">
+            <textarea id="appDesc" placeholder="Mô tả ngắn gọn"></textarea>
+            <input type="text" id="appLink" placeholder="Tên tệp (Ví dụ: quan-ly-moi.html)">
+            <div class="modal-btns">
+                <button class="btn-save" onclick="saveNewApp()">Lưu Lại</button>
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+            </div>
         </div>
     </div>
 
     <script>
-        function navigateTo(url) {
-            window.location.href = url;
+        // 1. Danh sách ứng dụng mặc định (Nếu bộ nhớ trống)
+        const defaultApps = [
+            { icon: '🌬️', title: 'Thông Gió Nhà Kho', desc: 'Tính nhiệt độ điểm sương, độ ẩm.', link: 'thong-gio-nha-kho.html' },
+            { icon: '📊', title: 'Bảng Tính Di Động', desc: 'Quản lý số lượng, khối lượng.', link: 'bang-tinh-di-dong.html' },
+            { icon: '📦', title: 'Quản Lý Xuất Kho', desc: 'Theo dõi tồn kho sau xuất hàng.', link: 'quan-ly-xuat-kho.html' },
+            { icon: '🗓️', title: 'Lập Lịch Kiểm Tra', desc: 'Tối ưu hóa thời gian kiểm tra kho.', link: 'lap-lich-ktr-nha-kho.html' }
+        ];
+
+        // 2. Load ứng dụng từ localStorage hoặc dùng mặc định
+        let myApps = JSON.parse(localStorage.getItem('myWarehouseApps')) || defaultApps;
+
+        function renderApps() {
+            const grid = document.getElementById('appsGrid');
+            grid.innerHTML = '';
+
+            myApps.forEach((app, index) => {
+                const card = document.createElement('div');
+                card.className = 'app-card';
+                card.innerHTML = `
+                    <button class="btn-delete" onclick="deleteApp(${index})">×</button>
+                    <span class="app-icon">${app.icon}</span>
+                    <h2>${app.title}</h2>
+                    <p>${app.desc}</p>
+                    <a href="${app.link}" class="btn-launch">Mở Ứng Dụng</a>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Thêm nút "Thêm Mới" cuối cùng
+            const addBtn = document.createElement('div');
+            addBtn.className = 'add-card';
+            addBtn.onclick = openModal;
+            addBtn.innerHTML = `<span>+</span><p>Thêm ứng dụng mới</p>`;
+            grid.appendChild(addBtn);
         }
-        
-        // Thêm hiệu ứng load cho trang
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.5s ease';
+
+        // 3. Các hàm xử lý Modal
+        function openModal() { document.getElementById('addModal').style.display = 'block'; }
+        function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+
+        function saveNewApp() {
+            const icon = document.getElementById('appIcon').value || '📁';
+            const title = document.getElementById('appTitle').value;
+            const desc = document.getElementById('appDesc').value;
+            const link = document.getElementById('appLink').value;
+
+            if (!title || !link) {
+                alert("Vui lòng nhập tên và liên kết tệp!");
+                return;
+            }
+
+            myApps.push({ icon, title, desc, link });
+            localStorage.setItem('myWarehouseApps', JSON.stringify(myApps));
+            renderApps();
+            closeModal();
             
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
-        });
+            // Xóa trắng ô nhập
+            document.getElementById('appTitle').value = '';
+            document.getElementById('appDesc').value = '';
+            document.getElementById('appLink').value = '';
+        }
+
+        function deleteApp(index) {
+            if (confirm("Bạn có chắc chắn muốn xóa ứng dụng này khỏi danh sách?")) {
+                myApps.splice(index, 1);
+                localStorage.setItem('myWarehouseApps', JSON.stringify(myApps));
+                renderApps();
+            }
+        }
+
+        function navigateTo(url) { window.location.href = url; }
+
+        // Khởi chạy khi load trang
+        renderApps();
     </script>
 </body>
 </html>
