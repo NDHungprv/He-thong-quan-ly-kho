@@ -3,233 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Cụ Lập Lịch Kiểm Tra Kho</title>
+    <title>Công Cụ Lập Lịch Kho</title>
     <style>
-        /* CSS */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        h1 { color: #007bff; text-align: center; margin-bottom: 25px; }
-        .input-group { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
-        .input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        .input-group input[type="text"], .input-group input[type="number"], .input-group input[type="time"], .input-group textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; margin-top: 5px; }
-        button { background-color: #28a745; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; transition: background-color 0.3s; display: block; width: 100%; margin-top: 20px; }
-        button:hover { background-color: #218838; }
+        /* GIAO DIỆN GỐC */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 15px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); }
+        h1 { color: #4a148c; text-align: center; margin-bottom: 20px; font-size: 1.6rem; }
         
-        /* Bảng Kết quả */
-        #resultTable { width: 100%; border-collapse: collapse; margin-top: 25px; }
-        #resultTable th, #resultTable td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        #resultTable th { background-color: #007bff; color: white; text-align: center; }
-        #resultTable tr:nth-child(even) { background-color: #f9f9f9; }
-        .header-section { background-color: #e9ecef !important; font-weight: bold; text-align: center !important; color: #333; }
-        .copy-btn { background-color: #17a2b8; margin-top: 15px; width: auto; padding: 8px 15px; float: right; }
-        .copy-btn:hover { background-color: #138496; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .input-group { border: 1px solid #eee; padding: 12px; border-radius: 10px; background: #fcfcfc; }
+        .full-width { grid-column: span 2; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; color: #555; font-size: 0.85rem; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
         
-        .error-message { color: red; margin-top: 15px; text-align: center; font-weight: bold; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        button.main-btn { flex: 2; background: #6f42c1; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: 0.3s; }
+        .copy-btn { flex: 1; background: #17a2b8; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        #summaryText { margin-bottom: 15px; padding: 12px; border-radius: 8px; text-align: center; display: none; font-size: 0.9rem; }
+        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; display: block !important; }
+
+        /* TỐI ƯU BẢNG VÀ TĂNG KÍCH THƯỚC CHỮ KHUNG GIỜ */
+        .table-wrapper { 
+            width: 100%; 
+            overflow-x: auto; 
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 320px; }
+        table th, table td { 
+            border: 1px solid #dee2e6; 
+            padding: 12px 5px; 
+            text-align: center; 
+        }
+        table th { background: #764ba2; color: #ffffff !important; white-space: nowrap; font-size: 0.9rem; }
+        
+        /* Cột STT nhỏ lại */
+        .stt-col { width: 40px; font-size: 0.8rem; color: #888; }
+        /* Cột Nhà Kho */
+        .name-col { font-weight: 600; font-size: 0.95rem; }
+        /* Cột Phút */
+        .dur-col { font-size: 0.85rem; color: #666; }
+        
+        /* CỘT KHUNG GIỜ - TĂNG KÍCH THƯỚC */
+        .time-cell { 
+            white-space: nowrap; 
+            font-weight: 800; /* Đậm hơn */
+            color: #4a148c; 
+            font-size: 1.15rem; /* To hơn rõ rệt */
+            letter-spacing: -0.5px;
+            background-color: #fdfaff; /* Nền rất nhạt để làm nổi bật */
+        }
+
+        .header-section { background: #f1f3f5 !important; font-weight: bold; font-size: 0.85rem; color: #444; }
+
+        @media (max-width: 600px) {
+            .input-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            h1 { font-size: 1.3rem; }
+            /* Vẫn giữ cỡ chữ khung giờ lớn trên mobile */
+            .time-cell { font-size: 1.05rem; }
+            table th, table td { padding: 10px 4px; }
+            .container { padding: 15px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📅 Công Cụ Lập Lịch Kiểm Tra Kho</h1>
+    <h1>📅 Lập Lịch Kho Linh Hoạt</h1>
 
-    <div class="input-group">
-        <label for="warehouseCount">1. Tổng số Nhà Kho cần kiểm tra:</label>
-        <input type="number" id="warehouseCount" value="24" min="1" required>
+    <div class="input-grid">
+        <div class="input-group">
+            <label>Tổng số Nhà Kho:</label>
+            <input type="number" id="warehouseCount" value="24">
+        </div>
+        <div class="input-group">
+            <label>Giờ Sáng (06:45 - 10:35):</label>
+            <div style="display: flex; gap: 5px;">
+                <input type="time" id="time_am_start" value="06:45">
+                <input type="time" id="time_am_end" value="10:35">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>Giờ Chiều (13:40 - 16:30):</label>
+            <div style="display: flex; gap: 5px;">
+                <input type="time" id="time_pm_start" value="13:40">
+                <input type="time" id="time_pm_end" value="16:30">
+            </div>
+        </div>
+        <div class="input-group full-width">
+            <label>Tên Nhà Kho:</label>
+            <textarea id="warehouseNames" rows="3">K1, K2, K3, K4, K5, K6, K15, K16, K17, K18, K19, K20, K21, K22, K23, K24, K27, K29, K30, K31, K32, K33, K34, K35</textarea>
+        </div>
+        <div class="input-group full-width">
+            <label>Di chuyển (phút):</label>
+            <textarea id="travelTimes" rows="2">4,4,3,5,4,3,4,4,5,3,4,4,4,3,5,4,4,3,4,5,4,3,4</textarea>
+        </div>
     </div>
 
-    <div class="input-group">
-        <label for="time_am_start">2. Khung giờ Buổi Sáng:</label>
-        <input type="time" id="time_am_start" value="06:45" required>
-        <input type="time" id="time_am_end" value="10:35" required style="margin-top: 10px;">
+    <div class="btn-group">
+        <button class="main-btn" onclick="calculateSchedule()">TẠO LỊCH TRÌNH</button>
+        <button class="copy-btn" onclick="copyTable()">COPY</button>
     </div>
 
-    <div class="input-group">
-        <label for="time_pm_start">3. Khung giờ Buổi Chiều:</label>
-        <input type="time" id="time_pm_start" value="13:40" required>
-        <input type="time" id="time_pm_end" value="16:30" required style="margin-top: 10px;">
-    </div>
+    <div id="summaryText"></div>
 
-    <div class="input-group">
-        <label for="warehouseNames">4. Tên Nhà Kho (Mỗi kho 1 dòng):</label>
-        <textarea id="warehouseNames" rows="6">K1
-K2
-K3
-K4
-K5
-K6
-K15
-K16
-K17
-K18
-K19
-K20
-K21
-K22
-K23
-K24
-K27
-K29
-K30
-K31
-K32
-K33
-K34
-K35</textarea>
+    <div class="table-wrapper">
+        <table id="resultTable"></table>
     </div>
-    
-    <div class="input-group">
-        <label for="travelTimes">5. Thời gian Di chuyển (phút) giữa các Kho (Theo thứ tự, cách nhau bởi dấu phẩy):</label>
-        <textarea id="travelTimes" rows="3">4,4,3,5,4,3,4,4,5,3,4,4,4,3,5,4,4,3,4,5,4,3,4</textarea>
-        <small> *Cần **N - 1** giá trị (Ví dụ: 24 kho cần 23 giá trị thời gian di chuyển).</small>
-    </div>
-
-    <button onclick="calculateSchedule()">Tạo Lịch Kiểm Tra</button>
-
-    <div id="result">
-        <div class="error-message" id="errorMessage"></div>
-        <button class="copy-btn" onclick="copyTable()">Sao chép Bảng</button>
-        <table id="resultTable">
-            </table>
-    </div>
-
 </div>
 
 <script>
-    // JavaScript
-    function timeToMinutes(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
-
-    function minutesToTime(totalMinutes) {
-        const hours = Math.floor(totalMinutes / 60);
-        const minutes = totalMinutes % 60;
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    }
+    function timeToMinutes(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+    function minutesToTime(m) { return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; }
 
     function calculateSchedule() {
-        const warehouseCount = Number(document.getElementById('warehouseCount').value);
-        const amStart = document.getElementById('time_am_start').value;
-        const amEnd = document.getElementById('time_am_end').value;
-        const pmStart = document.getElementById('time_pm_start').value;
-        const pmEnd = document.getElementById('time_pm_end').value;
-        const namesInput = document.getElementById('warehouseNames').value;
-        const travelsInput = document.getElementById('travelTimes').value;
-        
-        const names = namesInput.split('\n').map(n => n.trim()).filter(n => n);
-        const travels = travelsInput.split(',').map(t => Number(t.trim())).filter(t => !isNaN(t));
+        const count = Number(document.getElementById('warehouseCount').value);
+        const amS = timeToMinutes(document.getElementById('time_am_start').value);
+        const amE = timeToMinutes(document.getElementById('time_am_end').value);
+        const pmS = timeToMinutes(document.getElementById('time_pm_start').value);
+        const pmE = timeToMinutes(document.getElementById('time_pm_end').value);
+        const names = document.getElementById('warehouseNames').value.split(/[,\n]/).map(x => x.trim()).filter(x => x);
+        const travels = document.getElementById('travelTimes').value.split(',').map(x => Number(x.trim())).filter(x => !isNaN(x));
 
-        const errorDiv = document.getElementById('errorMessage');
-        errorDiv.textContent = '';
-        document.getElementById('resultTable').innerHTML = '';
+        const summary = document.getElementById('summaryText');
+        const table = document.getElementById('resultTable');
+        summary.style.display = 'block';
 
-        if (names.length !== warehouseCount) {
-            errorDiv.textContent = `Lỗi: Số lượng tên kho (${names.length}) không khớp với Tổng số kho (${warehouseCount}).`;
-            return;
-        }
-        
-        if (travels.length !== warehouseCount - 1 && warehouseCount > 0) {
-            errorDiv.textContent = `Lỗi: Cần ${warehouseCount - 1} thời gian di chuyển, nhưng chỉ có ${travels.length} giá trị.`;
+        if (names.length !== count || travels.length !== count - 1) {
+            summary.className = 'error';
+            summary.innerText = "Lỗi dữ liệu: Kiểm tra lại số lượng tên kho/di chuyển.";
             return;
         }
 
-        // 1. Tính tổng thời gian làm việc có sẵn (phút)
-        const amTotal = timeToMinutes(amEnd) - timeToMinutes(amStart);
-        const pmTotal = timeToMinutes(pmEnd) - timeToMinutes(pmStart);
-        const totalAvailableTime = amTotal + pmTotal;
+        const totalTravel = travels.reduce((a, b) => a + b, 0);
+        const avgTime = Math.floor(((amE - amS + pmE - pmS) - totalTravel) / count);
 
-        // 2. Tính tổng thời gian di chuyển cần thiết
-        const totalTravelTime = travels.reduce((a, b) => a + b, 0);
-
-        // 3. Tính thời gian kiểm tra thực tế (phút/kho)
-        const totalCheckTime = totalAvailableTime - totalTravelTime;
-        const checkTimePerWarehouse = Math.floor(totalCheckTime / warehouseCount);
-
-        if (checkTimePerWarehouse <= 0) {
-            errorDiv.textContent = 'Lỗi: Thời gian kiểm tra quá ngắn hoặc không đủ thời gian làm việc cho số lượng kho này.';
+        if (avgTime < 6) {
+            summary.className = 'error';
+            summary.innerText = `Quá hẹp! Bình quân chỉ đạt ${avgTime} ph/kho (Yêu cầu >= 6).`;
             return;
         }
 
-        // 4. Chia số lượng kho giữa sáng và chiều
-        // Mục tiêu: cân bằng số lượng kho để buổi chiều kết thúc đúng giờ PM_END
-        
-        let amCount = Math.ceil(warehouseCount / 2); // Bắt đầu với số lượng kho sáng/chiều bằng nhau
-        let pmCount = warehouseCount - amCount;
-
-        // Tính thời gian tối thiểu cần thiết cho buổi chiều để đạt được PM_END
-        let pmTravel = travels.slice(amCount - 1, warehouseCount - 1).reduce((a, b) => a + b, 0);
-        let pmRequiredTime = (pmCount * checkTimePerWarehouse) + pmTravel;
-        
-        // Điều chỉnh số lượng kho buổi sáng/chiều cho đến khi thời gian buổi chiều khớp
-        while (pmRequiredTime > pmTotal && amCount < warehouseCount) {
-            amCount++;
-            pmCount--;
-            if (pmCount <= 0) break; // Trường hợp không thể chia được
-            pmTravel = travels.slice(amCount - 1, warehouseCount - 1).reduce((a, b) => a + b, 0);
-            pmRequiredTime = (pmCount * checkTimePerWarehouse) + pmTravel;
+        let amCount = 0, usedAmTime = 0;
+        for (let i = 0; i < count; i++) {
+            let travel = (i > 0) ? travels[i-1] : 0;
+            if (usedAmTime + travel + avgTime <= (amE - amS)) { usedAmTime += travel + avgTime; amCount++; } 
+            else break;
         }
-        
-        if (pmRequiredTime > pmTotal) {
-             errorDiv.textContent = 'Cảnh báo: Không thể hoàn thành lịch trình. Vui lòng tăng thời gian làm việc hoặc giảm số lượng kho.';
-             return;
-        }
-        
-        // 5. Tạo bảng kết quả
-        let tableHTML = '<thead><tr><th>STT</th><th>Tên Kho</th><th>Bắt đầu (Kiểm tra)</th><th>Kết thúc (Kiểm tra)</th></tr></thead><tbody>';
-        let currentTime = timeToMinutes(amStart);
-        let currentTravelIndex = 0;
-        let isAM = true;
-        
-        // Hàm thêm một dòng vào bảng
-        const addRow = (index, name, startMin, endMin) => {
-            const startStr = minutesToTime(startMin);
-            const endStr = minutesToTime(endMin);
-            return `<tr><td>${index}</td><td>${name}</td><td>${startStr}</td><td>${endStr}</td></tr>`;
-        };
-        
-        // Thêm tiêu đề Buổi Sáng
-        tableHTML += `<tr class="header-section"><td colspan="4">BUỔI SÁNG (${amCount} KHO)</td></tr>`;
+        let pmCount = count - amCount;
 
-        // Lịch trình Buổi Sáng
+        function distribute(n, total) {
+            if (n <= 0) return [];
+            let res = Array(n).fill(Math.floor(total/n));
+            let rem = total % n;
+            for(let i=0; i<rem; i++) res[i]++;
+            for(let i=0; i<n-1; i+=2) {
+                let shift = Math.floor(Math.random()*2)+1;
+                if(res[i]-shift >= 6) { res[i]-=shift; res[i+1]+=shift; }
+            }
+            return res;
+        }
+
+        const amFinal = distribute(amCount, (amE - amS) - (amCount > 1 ? travels.slice(0, amCount-1).reduce((a,b)=>a+b,0) : 0));
+        const pmFinal = distribute(pmCount, (pmE - pmS) - (pmCount > 1 ? travels.slice(amCount, count-1).reduce((a,b)=>a+b,0) : 0));
+
+        summary.className = 'success';
+        summary.innerHTML = `Đã chia: <b>${amCount}</b> sáng | <b>${pmCount}</b> chiều.`;
+
+        let html = `<thead><tr><th class="stt-col">STT</th><th>Kho</th><th class="dur-col">Phút</th><th>Khung giờ</th></tr></thead><tbody>`;
+        
+        html += `<tr class="header-section"><td colspan="4">CA SÁNG</td></tr>`;
+        let curr = amS;
         for (let i = 0; i < amCount; i++) {
-            const startIndex = currentTime;
-            const endIndex = startIndex + checkTimePerWarehouse;
-            tableHTML += addRow(i + 1, names[i], startIndex, endIndex);
-            
-            currentTime = endIndex;
-            if (i < amCount - 1) {
-                // Thêm thời gian di chuyển
-                currentTime += travels[currentTravelIndex];
-                currentTravelIndex++;
-            }
+            let end = curr + amFinal[i];
+            html += `<tr><td class="stt-col">${i+1}</td><td class="name-col">${names[i]}</td><td class="dur-col">${amFinal[i]}</td><td class="time-cell">${minutesToTime(curr)} - ${minutesToTime(end)}</td></tr>`;
+            if (i < amCount - 1) curr = end + travels[i];
         }
-        
-        // Thêm tiêu đề Buổi Chiều
-        tableHTML += `<tr class="header-section"><td colspan="4">BUỔI CHIỀU (${pmCount} KHO)</td></tr>`;
-        
-        // Chuyển sang thời gian bắt đầu buổi chiều
-        currentTime = timeToMinutes(pmStart);
 
-        // Lịch trình Buổi Chiều
-        for (let i = amCount; i < warehouseCount; i++) {
-            const startIndex = currentTime;
-            const endIndex = startIndex + checkTimePerWarehouse;
-            tableHTML += addRow(i + 1, names[i], startIndex, endIndex);
-
-            currentTime = endIndex;
-            if (i < warehouseCount - 1) {
-                // Thêm thời gian di chuyển
-                currentTime += travels[currentTravelIndex];
-                currentTravelIndex++;
-            }
+        html += `<tr class="header-section"><td colspan="4">CA CHIỀU</td></tr>`;
+        curr = pmS;
+        for (let i = 0; i < pmCount; i++) {
+            let idx = i + amCount;
+            let end = curr + pmFinal[i];
+            html += `<tr><td class="stt-col">${idx+1}</td><td class="name-col">${names[idx]}</td><td class="dur-col">${pmFinal[i]}</td><td class="time-cell">${minutesToTime(curr)} - ${minutesToTime(end)}</td></tr>`;
+            if (i < pmCount - 1) curr = end + travels[idx];
         }
-        
-        tableHTML += '</tbody>';
-        document.getElementById('resultTable').innerHTML = tableHTML;
-        
-        // Hiển thị thông tin tổng kết (Tùy chọn)
-        const summary = `<p style="margin-top: 20px; text-align: center; font-style: italic;">Thời gian kiểm tra cố định mỗi kho: **${checkTimePerWarehouse} phút**</p>`;
-        document.getElementById('resultTable').insertAdjacentHTML('beforebegin', summary);
+        table.innerHTML = html + `</tbody>`;
     }
 
     function copyTable() {
@@ -238,21 +202,10 @@ K35</textarea>
         range.selectNode(table);
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(range);
-        
-        try {
-            document.execCommand('copy');
-            alert('Đã sao chép bảng vào clipboard thành công!');
-        } catch (err) {
-            console.error('Không thể sao chép', err);
-            alert('Sao chép thất bại. Vui lòng chọn và copy thủ công.');
-        }
-        
-        window.getSelection().removeAllRanges();
+        document.execCommand('copy');
+        alert('Đã chép lịch trình!');
     }
-
-    // Tải dữ liệu mặc định khi trang load
-    document.addEventListener('DOMContentLoaded', calculateSchedule);
+    window.onload = calculateSchedule;
 </script>
-
 </body>
 </html>
