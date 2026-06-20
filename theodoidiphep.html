@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-  <title>Quản lý phép</title>
+  <title>Quản lý phép QNCN | Theo dõi nhanh</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,11 +45,27 @@
     .sidebar { background: #f4f7f1; border-radius: 22px; padding: 18px 14px; border: 1px solid #d4dcc8; box-shadow: 0 6px 16px rgba(0,20,0,0.15); display: flex; flex-direction: column; max-height: 80vh; }
     .sidebar h3 { color: #1e3a1e; font-size: 1.1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; border-left: 4px solid #c9a227; padding-left: 10px; }
     .soldier-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-    .soldier-item { background: white; padding: 12px 14px; border-radius: 14px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; font-weight: 600; color: #2d3e1f; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .soldier-item {
+      background: white;
+      padding: 12px 14px;
+      border-radius: 14px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: #2d3e1f;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      font-size: var(--item-font-size, 0.95rem);
+    }
     .soldier-item.active { border-color: #3b6e2b; background: #e6f0da; }
     .soldier-item:hover { background: #edf4e5; }
-    .badge-info { font-size: 0.75rem; background: #2d4720; color: #f5e56c; padding: 3px 10px; border-radius: 14px; }
-    .delete-soldier-btn { color: #a12b2b; cursor: pointer; margin-left: 8px; }
+    .soldier-item .stt { font-weight: 700; color: #3b5e2b; margin-right: 4px; min-width: 20px; display: inline-block; }
+    .info-text { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+    .badge-info { font-size: 0.75em; background: #2d4720; color: #f5e56c; padding: 3px 8px; border-radius: 14px; white-space: nowrap; }
+    .delete-soldier-btn { color: #a12b2b; cursor: pointer; margin-left: 8px; flex-shrink: 0; }
     .btn-add { background: #2d4b1e; border: none; color: white; font-weight: 700; padding: 11px 16px; border-radius: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 0.9rem; border: 1px solid #5a7a3a; margin-top: 8px; }
     .detail-panel { display: flex; flex-direction: column; gap: 20px; }
     .card { background: #f8faf7; border-radius: 22px; padding: 22px 24px; box-shadow: 0 8px 20px rgba(0,20,0,0.2); border: 1px solid #d4dcc8; }
@@ -82,7 +98,6 @@
     .month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 12px; }
     .month-check { display: flex; align-items: center; gap: 6px; background: white; padding: 10px; border-radius: 12px; border: 1px solid #d4dcc8; cursor: pointer; }
     .month-check input { width: 18px; height: 18px; accent-color: #2d4b1e; }
-    .max-months-input { width: 80px; display: inline-block; margin-left: 10px; }
     .footer-note { font-size: 0.8rem; color: #3e4f2e; text-align: right; margin-top: 10px; }
     .note { font-size: 0.8rem; color: #5e6b4b; margin-top: 6px; font-style: italic; }
     .backup-group { margin-top: 14px; border-top: 1px solid #ccd7be; padding-top: 14px; }
@@ -90,14 +105,24 @@
     .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
     #importFileInput { display: none; }
     .borrow-option { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .toggle-info-btn { background: none; border: none; color: #2d4b1e; font-size: 1.2rem; cursor: pointer; margin-left: auto; }
+    .collapsed .card-content { display: none; }
+    .collapsed h2 { margin-bottom: 0; }
+    .quick-view-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+    .quick-view-table th, .quick-view-table td { border: 1px solid #cbd5bc; padding: 6px 8px; text-align: center; }
+    .quick-view-table th { background: #2d4120; color: #f5f0d7; }
+    .quick-view-table td.leave-day { background: #3b6e2b; color: white; font-weight: 700; }
+    .quick-view-table td { background: #f8faf7; }
+    .quick-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .month-nav { display: flex; gap: 6px; align-items: center; }
   </style>
 </head>
 <body>
 <div class="app-container">
   <div class="military-header">
-    
+    <i class="fas fa-star star-icon"></i>
     <div class="header-text">
-      <h1>Theo dõi đi phép</h1>
+      <h1>Quân nhân chuyên nghiệp</h1>
       <div class="sub">
         <span>Thông tư 56/2025/TT-BQP · Điều 6</span>
         <span class="badge-tt">Năm làm việc: <span id="currentYearDisplay">2026</span></span>
@@ -108,7 +133,7 @@
 
   <div class="main-layout">
     <div class="sidebar">
-      <h3><i class="fas fa-users"></i> Danh sách quân nhân</h3>
+      <h3><i class="fas fa-users"></i> Danh sách (<span id="soldierCount">0</span>)</h3>
       <div class="soldier-list" id="soldierListContainer"></div>
       <button class="btn-add" id="addSoldierBtn"><i class="fas fa-user-plus"></i> Thêm quân nhân</button>
       <div style="margin-top:12px; font-size:0.8rem; color:#5e6b4b;">
@@ -130,27 +155,32 @@
         <p>Chọn một quân nhân từ danh sách hoặc thêm mới.</p>
       </div>
       <div id="soldierDetailContent" style="display: none;">
-        <div class="card">
-          <h2><i class="fas fa-id-card"></i> Thông tin & tính phép</h2>
-          <div class="form-row">
-            <div class="input-group"><label>Họ tên</label><input type="text" id="editName"></div>
-            <div class="input-group"><label>Năm nhập ngũ</label><select id="editEnlistYear"></select></div>
-            <div class="input-group"><label>Thời gian công tác</label><div id="computedYearsDisplay" style="padding:11px; background:#eef5e4; border-radius:14px; font-weight:700;">-- năm</div></div>
+        <div class="card" id="infoCard">
+          <div style="display: flex; align-items: center;">
+            <h2 style="margin-bottom:0; border-left: 6px solid #c9a227; padding-left:15px;"><i class="fas fa-id-card"></i> Thông tin & tính phép</h2>
+            <button class="toggle-info-btn" id="toggleInfoBtn"><i class="fas fa-chevron-up"></i></button>
           </div>
-          <div class="form-row">
-            <div class="input-group"><label>Điều kiện đóng quân</label><select id="editStationCondition">
-              <option value="none">Không thuộc diện nghỉ thêm</option>
-              <option value="extra10_500">Cách nơi ĐK nghỉ phép ≥ 500 km</option>
-              <option value="extra10_kho khăn">Địa bàn KT-XH đặc biệt khó khăn</option>
-              <option value="extra10_sau_xa_bien_gioi_300">Vùng sâu/xa/biên giới cách ≥ 300 km</option>
-              <option value="extra10_truong_sa_dk">Đảo Trường Sa, Nhà giàn DK</option>
-              <option value="extra5_300_500">Cách nơi ĐK nghỉ phép 300 - dưới 500 km</option>
-              <option value="extra5_sau_xa_200_300">Vùng sâu/xa/biên giới cách 200 - dưới 300 km</option>
-              <option value="extra5_dao_phu_cap">Đảo hưởng phụ cấp khu vực</option>
-            </select></div>
-            <div class="input-group" style="align-self: flex-end;"><button class="btn" id="updateSoldierBtn"><i class="fas fa-sync-alt"></i> Cập nhật</button></div>
+          <div class="card-content">
+            <div class="form-row">
+              <div class="input-group"><label>Họ tên</label><input type="text" id="editName"></div>
+              <div class="input-group"><label>Năm nhập ngũ</label><select id="editEnlistYear"></select></div>
+              <div class="input-group"><label>Thời gian công tác</label><div id="computedYearsDisplay" style="padding:11px; background:#eef5e4; border-radius:14px; font-weight:700;">-- năm</div></div>
+            </div>
+            <div class="form-row">
+              <div class="input-group"><label>Điều kiện đóng quân</label><select id="editStationCondition">
+                <option value="none">Không thuộc diện nghỉ thêm</option>
+                <option value="extra10_500">Cách nơi ĐK nghỉ phép ≥ 500 km</option>
+                <option value="extra10_kho khăn">Địa bàn KT-XH đặc biệt khó khăn</option>
+                <option value="extra10_sau_xa_bien_gioi_300">Vùng sâu/xa/biên giới cách ≥ 300 km</option>
+                <option value="extra10_truong_sa_dk">Đảo Trường Sa, Nhà giàn DK</option>
+                <option value="extra5_300_500">Cách nơi ĐK nghỉ phép 300 - dưới 500 km</option>
+                <option value="extra5_sau_xa_200_300">Vùng sâu/xa/biên giới cách 200 - dưới 300 km</option>
+                <option value="extra5_dao_phu_cap">Đảo hưởng phụ cấp khu vực</option>
+              </select></div>
+              <div class="input-group" style="align-self: flex-end;"><button class="btn" id="updateSoldierBtn"><i class="fas fa-sync-alt"></i> Cập nhật</button></div>
+            </div>
+            <span class="auto-calc-note"><i class="fas fa-calculator"></i> Phép tính tự động theo thâm niên và địa bàn.</span>
           </div>
-          <span class="auto-calc-note"><i class="fas fa-calculator"></i> Phép tính tự động theo thâm niên và địa bàn.</span>
         </div>
 
         <div class="card">
@@ -172,6 +202,7 @@
             <button class="tab-btn active" data-tab="history">📋 Lịch sử đăng ký</button>
             <button class="tab-btn" data-tab="monthly">📊 Thống kê theo tháng</button>
             <button class="tab-btn" data-tab="plan">📅 Đăng ký tháng nghỉ dự kiến</button>
+            <button class="tab-btn" data-tab="quickview">👁️ Theo dõi nhanh</button>
           </div>
           <div id="tabHistory">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -191,6 +222,19 @@
             <div class="month-grid" id="planMonthGrid"></div>
             <div style="margin-top:16px;">
               <button class="btn" id="savePlanBtn"><i class="fas fa-save"></i> Lưu kế hoạch</button>
+            </div>
+          </div>
+          <div id="tabQuickview" style="display:none;">
+            <h2 style="border-left: none; padding-left:0;">Theo dõi nhanh lịch nghỉ phép</h2>
+            <div class="quick-controls">
+              <div class="month-nav">
+                <button class="btn btn-sm" id="qvPrevMonth"><i class="fas fa-chevron-left"></i></button>
+                <span id="qvMonthLabel" style="font-weight:700; min-width:120px; text-align:center;">Tháng 1/2026</span>
+                <button class="btn btn-sm" id="qvNextMonth"><i class="fas fa-chevron-right"></i></button>
+              </div>
+            </div>
+            <div style="overflow-x: auto;" id="quickViewContainer">
+              <!-- Bảng sẽ được tạo động -->
             </div>
           </div>
         </div>
@@ -220,7 +264,7 @@
 <script>
   (function() {
     const STORAGE_KEY = 'QNCN_BORROW_ADVANCED';
-    const MAX_BORROW_DAYS = 10; // Số ngày tối đa được ứng
+    const MAX_BORROW_DAYS = 10;
 
     let appData = {
       currentYear: new Date().getFullYear(),
@@ -229,10 +273,14 @@
       maxPlannedMonths: 2
     };
 
-    // DOM elements
+    // Quick view state
+    let qvMonth = new Date().getMonth(); // 0-11
+    let qvYear = new Date().getFullYear();
+
     const currentYearDisplay = document.getElementById('currentYearDisplay');
     const newYearBtn = document.getElementById('newYearBtn');
     const soldierListContainer = document.getElementById('soldierListContainer');
+    const soldierCountSpan = document.getElementById('soldierCount');
     const addSoldierBtn = document.getElementById('addSoldierBtn');
     const noSelectionMessage = document.getElementById('noSelectionMessage');
     const soldierDetailContent = document.getElementById('soldierDetailContent');
@@ -254,6 +302,7 @@
     const tabHistory = document.getElementById('tabHistory');
     const tabMonthly = document.getElementById('tabMonthly');
     const tabPlan = document.getElementById('tabPlan');
+    const tabQuickview = document.getElementById('tabQuickview');
     const statsYearSelect = document.getElementById('statsYearSelect');
     const monthlyGrid = document.getElementById('monthlyGrid');
     const planYearLabel = document.getElementById('planYearLabel');
@@ -274,11 +323,15 @@
     const exportDataBtn = document.getElementById('exportDataBtn');
     const importDataBtn = document.getElementById('importDataBtn');
     const importFileInput = document.getElementById('importFileInput');
+    const toggleInfoBtn = document.getElementById('toggleInfoBtn');
+    const infoCard = document.getElementById('infoCard');
 
-    // Utilities
-    function computeServiceYears(enlistYear) {
-      return appData.currentYear - enlistYear;
-    }
+    const qvPrevMonth = document.getElementById('qvPrevMonth');
+    const qvNextMonth = document.getElementById('qvNextMonth');
+    const qvMonthLabel = document.getElementById('qvMonthLabel');
+    const quickViewContainer = document.getElementById('quickViewContainer');
+
+    function computeServiceYears(enlistYear) { return appData.currentYear - enlistYear; }
     function computeTotalDays(serviceYears, stationCondition) {
       let base = 20;
       if (serviceYears < 15) base = 20;
@@ -291,9 +344,7 @@
     function getUsedDaysForYear(soldier, year) {
       return soldier.history.filter(e => new Date(e.startDate).getFullYear() === year).reduce((sum, e) => sum + e.days, 0);
     }
-    function getSelectedSoldier() {
-      return appData.soldiers.find(s => s.id === appData.selectedSoldierId) || null;
-    }
+    function getSelectedSoldier() { return appData.soldiers.find(s => s.id === appData.selectedSoldierId) || null; }
     function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); }
 
     function loadData() {
@@ -334,17 +385,59 @@
       } else maxMonthsSetting.value = appData.maxPlannedMonths;
     });
 
+    function computeOptimalFontSize() {
+      const container = soldierListContainer;
+      if (!container || appData.soldiers.length === 0) return '0.95rem';
+      const testSpan = document.createElement('span');
+      testSpan.style.visibility = 'hidden';
+      testSpan.style.position = 'absolute';
+      testSpan.style.whiteSpace = 'nowrap';
+      testSpan.style.fontWeight = '600';
+      testSpan.style.fontFamily = "'Segoe UI', Roboto, system-ui, sans-serif";
+      document.body.appendChild(testSpan);
+      let maxTextWidth = 0;
+      appData.soldiers.forEach((s, idx) => {
+        const remaining = Math.max(0, s.totalDays - getUsedDaysForYear(s, appData.currentYear));
+        const text = `${idx + 1}. ${s.name} ${remaining}/${s.totalDays}`;
+        testSpan.textContent = text;
+        const width = testSpan.getBoundingClientRect().width;
+        if (width > maxTextWidth) maxTextWidth = width;
+      });
+      document.body.removeChild(testSpan);
+      const containerWidth = container.clientWidth;
+      const itemPadding = 28;
+      const deleteBtnWidth = 32;
+      const iconWidth = 22;
+      const sttMargin = 4;
+      const availableWidth = containerWidth - itemPadding - deleteBtnWidth - iconWidth - sttMargin - 20;
+      if (maxTextWidth <= 0) return '0.95rem';
+      const baseFontSize = 16;
+      const baseWidthAt1rem = maxTextWidth / (0.95 * baseFontSize);
+      let optimalRem = Math.min(0.95, availableWidth / (baseWidthAt1rem * baseFontSize) * 0.95);
+      optimalRem = Math.max(0.7, Math.min(0.95, optimalRem));
+      return `${optimalRem.toFixed(2)}rem`;
+    }
+
     function renderSoldierList() {
+      soldierCountSpan.textContent = appData.soldiers.length;
       if (!appData.soldiers.length) {
         soldierListContainer.innerHTML = '<div style="color:#7a8b6b; text-align:center; padding:20px;">Chưa có quân nhân.</div>';
+        soldierListContainer.style.setProperty('--item-font-size', '0.95rem');
         return;
       }
+      const optimalFontSize = computeOptimalFontSize();
+      soldierListContainer.style.setProperty('--item-font-size', optimalFontSize);
       let html = '';
-      appData.soldiers.forEach(s => {
+      appData.soldiers.forEach((s, index) => {
         const activeClass = s.id === appData.selectedSoldierId ? 'active' : '';
-        const yrs = computeServiceYears(s.enlistYear);
+        const remaining = Math.max(0, s.totalDays - getUsedDaysForYear(s, appData.currentYear));
         html += `<div class="soldier-item ${activeClass}" data-id="${s.id}">
-          <span><i class="fas fa-user-circle"></i> ${escapeHtml(s.name)} <span class="badge-info">${yrs} năm</span></span>
+          <span class="info-text">
+            <span class="stt">${index + 1}.</span>
+            <i class="fas fa-user-circle"></i>
+            <span style="flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.name)}</span>
+            <span class="badge-info">${remaining}/${s.totalDays}</span>
+          </span>
           <span class="delete-soldier-btn" data-delete-id="${s.id}"><i class="fas fa-times-circle"></i></span>
         </div>`;
       });
@@ -435,8 +528,7 @@
       detailTotalDays.textContent = soldier.totalDays;
       const used = getUsedDaysForYear(soldier, appData.currentYear);
       detailUsedDays.textContent = used;
-      const remaining = Math.max(0, soldier.totalDays - used);
-      detailRemainingDays.textContent = remaining;
+      detailRemainingDays.textContent = Math.max(0, soldier.totalDays - used);
       detailBorrowedDays.textContent = soldier.borrowedDays || 0;
 
       populateHistoryYearFilter(soldier);
@@ -485,7 +577,6 @@
       if (!soldier) return;
       const entry = soldier.history.find(e => e.id == entryId);
       if (!entry) return;
-      // Nếu là entry ứng phép, giảm borrowedDays
       if (entry.note && entry.note.includes('Ứng phép từ năm trước')) {
         soldier.borrowedDays = Math.max(0, (soldier.borrowedDays || 0) - entry.days);
       }
@@ -525,7 +616,6 @@
       if (soldier) renderMonthlyStats(soldier, parseInt(statsYearSelect.value));
     });
 
-    // Tab switching
     tabBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         tabBtns.forEach(b => b.classList.remove('active'));
@@ -534,6 +624,7 @@
         tabHistory.style.display = tab === 'history' ? 'block' : 'none';
         tabMonthly.style.display = tab === 'monthly' ? 'block' : 'none';
         tabPlan.style.display = tab === 'plan' ? 'block' : 'none';
+        tabQuickview.style.display = tab === 'quickview' ? 'block' : 'none';
       });
     });
 
@@ -546,12 +637,9 @@
       let html = '';
       for (let m = 1; m <= 12; m++) {
         const checked = planned.includes(m) ? 'checked' : '';
-        html += `<label class="month-check">
-          <input type="checkbox" value="${m}" ${checked}> Tháng ${m}
-        </label>`;
+        html += `<label class="month-check"><input type="checkbox" value="${m}" ${checked}> Tháng ${m}</label>`;
       }
       planMonthGrid.innerHTML = html;
-
       const checkboxes = planMonthGrid.querySelectorAll('input[type=checkbox]');
       checkboxes.forEach(cb => {
         cb.addEventListener('change', () => {
@@ -577,7 +665,6 @@
       alert('Đã lưu kế hoạch tháng nghỉ dự kiến.');
     });
 
-    // Modal đăng ký nghỉ phép (có ứng phép)
     function openModal() {
       const soldier = getSelectedSoldier();
       if (!soldier) { alert('Chọn quân nhân trước.'); return; }
@@ -620,11 +707,7 @@
           return;
         }
         const borrowDays = Math.min(days - remaining, maxCanBorrow);
-        if (borrowDays > 0) {
-          soldier.borrowedDays = (soldier.borrowedDays || 0) + borrowDays;
-          // Thêm entry ứng phép vào lịch sử năm sau? Không, ta thêm vào năm hiện tại nhưng ghi chú "Ứng phép năm sau"
-          // Thực tế số ngày nghỉ vẫn tính vào usedDays năm nay, và borrowedDays ghi nhận nợ.
-        }
+        if (borrowDays > 0) soldier.borrowedDays = (soldier.borrowedDays || 0) + borrowDays;
       }
 
       soldier.history.push({
@@ -639,7 +722,6 @@
       closeModalFunc();
     }
 
-    // Kiểm tra khi thay đổi ngày để hiển thị tùy chọn ứng
     function checkBorrowOption() {
       const soldier = getSelectedSoldier();
       if (!soldier) return;
@@ -665,7 +747,6 @@
       const soldier = getSelectedSoldier();
       if (!soldier) return;
       if (!confirm(`Xóa tất cả lịch sử nghỉ phép trong năm ${appData.currentYear}?`)) return;
-      // Cũng reset borrowedDays nếu có
       soldier.history = soldier.history.filter(e => new Date(e.startDate).getFullYear() !== appData.currentYear);
       soldier.borrowedDays = 0;
       saveData();
@@ -676,7 +757,6 @@
       if (!confirm(`Chuyển sang năm ${appData.currentYear + 1}? Số ngày ứng sẽ được chuyển thành đã sử dụng của năm mới.`)) return;
       appData.currentYear += 1;
       appData.soldiers.forEach(s => {
-        // Chuyển borrowedDays thành lịch sử năm mới
         if (s.borrowedDays > 0) {
           const firstDay = new Date(appData.currentYear, 0, 1);
           const lastDay = new Date(appData.currentYear, 0, s.borrowedDays);
@@ -696,7 +776,93 @@
       renderDetail();
     }
 
-    // Xuất/nhập
+    // QUICK VIEW FUNCTIONS
+    function renderQuickView() {
+      if (!appData.soldiers.length) {
+        quickViewContainer.innerHTML = '<p>Chưa có quân nhân nào.</p>';
+        return;
+      }
+      qvMonthLabel.textContent = `Tháng ${qvMonth + 1}/${qvYear}`;
+
+      // Xác định tất cả các ngày trong tháng có ít nhất 1 quân nhân nghỉ
+      const daysInMonth = new Date(qvYear, qvMonth + 1, 0).getDate();
+      const leaveDays = new Set();
+      const soldierLeaveMap = new Map(); // soldierId -> Set of day numbers
+
+      appData.soldiers.forEach(s => {
+        const daysOff = new Set();
+        s.history.forEach(h => {
+          const start = new Date(h.startDate);
+          const end = new Date(h.endDate);
+          if (start.getFullYear() === qvYear && start.getMonth() === qvMonth ||
+              end.getFullYear() === qvYear && end.getMonth() === qvMonth ||
+              (start <= new Date(qvYear, qvMonth, daysInMonth) && end >= new Date(qvYear, qvMonth, 1))) {
+            for (let d = new Date(Math.max(start, new Date(qvYear, qvMonth, 1)));
+                 d <= new Date(Math.min(end, new Date(qvYear, qvMonth, daysInMonth)));
+                 d.setDate(d.getDate() + 1)) {
+              if (d.getMonth() === qvMonth && d.getFullYear() === qvYear) {
+                const day = d.getDate();
+                daysOff.add(day);
+                leaveDays.add(day);
+              }
+            }
+          }
+        });
+        soldierLeaveMap.set(s.id, daysOff);
+      });
+
+      const sortedDays = Array.from(leaveDays).sort((a, b) => a - b);
+      if (sortedDays.length === 0) {
+        quickViewContainer.innerHTML = '<p>Không có quân nhân nào nghỉ phép trong tháng này.</p>';
+        return;
+      }
+
+      // Tạo bảng: hàng đầu là tên quân nhân, cột đầu là ngày
+      let html = '<table class="quick-view-table"><thead><tr><th>Ngày</th>';
+      appData.soldiers.forEach(s => {
+        html += `<th>${escapeHtml(s.name)}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      sortedDays.forEach(day => {
+        html += `<tr><td><strong>${day}/${qvMonth + 1}</strong></td>`;
+        appData.soldiers.forEach(s => {
+          const daysOff = soldierLeaveMap.get(s.id);
+          const isLeave = daysOff && daysOff.has(day);
+          html += `<td class="${isLeave ? 'leave-day' : ''}">${isLeave ? '✓' : ''}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      quickViewContainer.innerHTML = html;
+    }
+
+    qvPrevMonth.addEventListener('click', () => {
+      if (qvMonth === 0) {
+        qvMonth = 11;
+        qvYear--;
+      } else {
+        qvMonth--;
+      }
+      renderQuickView();
+    });
+
+    qvNextMonth.addEventListener('click', () => {
+      if (qvMonth === 11) {
+        qvMonth = 0;
+        qvYear++;
+      } else {
+        qvMonth++;
+      }
+      renderQuickView();
+    });
+
+    // Đảm bảo khi chuyển tab quickview thì render
+    const quickviewTabBtn = document.querySelector('[data-tab="quickview"]');
+    quickviewTabBtn.addEventListener('click', () => {
+      renderQuickView();
+    });
+
     function exportData() {
       const dataStr = JSON.stringify(appData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
@@ -739,7 +905,12 @@
       reader.readAsText(file);
     }
 
-    // Event listeners
+    toggleInfoBtn.addEventListener('click', () => {
+      infoCard.classList.toggle('collapsed');
+      const icon = toggleInfoBtn.querySelector('i');
+      icon.className = infoCard.classList.contains('collapsed') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    });
+
     newYearBtn.addEventListener('click', moveToNewYear);
     addSoldierBtn.addEventListener('click', addNewSoldier);
     updateSoldierBtn.addEventListener('click', updateSoldierInfo);
@@ -748,7 +919,6 @@
     saveRegistrationBtn.addEventListener('click', saveRegistration);
     resetUsedBtn.addEventListener('click', resetUsedDays);
     window.addEventListener('click', e => { if (e.target === registerModal) closeModalFunc(); });
-
     exportDataBtn.addEventListener('click', exportData);
     importDataBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', (e) => {
@@ -760,7 +930,6 @@
       }
     });
 
-    // Init
     loadData();
     if (!appData.soldiers.length) appData.selectedSoldierId = null;
     currentYearDisplay.textContent = appData.currentYear;
