@@ -221,6 +221,7 @@
     .quick-view-table tbody tr:nth-child(even) td:first-child,
     .quick-view-table tbody tr:nth-child(even) td:nth-child(2) { background: #fafcf8; }
     .max-days-hint { color: var(--danger); font-size: 0.82rem; margin-top: 8px; background: #fdf1f1; padding: 8px 10px; border-radius: 8px; }
+    .day-count-display { font-weight: 600; color: var(--olive-dk); margin-top: 6px; font-size: 0.9rem; }
 
     .month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .month-grid > div { background: #f4f7f1; padding: 10px; text-align: center; border-radius: var(--r-sm); }
@@ -445,9 +446,10 @@
       <div class="input-group"><label>Ngày bắt đầu</label><input type="date" id="startDate"></div>
       <div class="input-group"><label>Ngày kết thúc</label><input type="date" id="endDate"></div>
       <div class="input-group"><label>Ghi chú</label><input type="text" id="noteText" placeholder="Không bắt buộc"></div>
+      <div id="dayCountDisplay" class="day-count-display"></div>
       <div id="modalError" style="color:#b13b3b; font-size:0.9rem;"></div>
       <div id="maxDaysHint" class="max-days-hint" style="display:none;"></div>
-      <div id="borrowOptionSection" style="display:none; margin-top:10px;">
+      <div id="borrowOptionSection" style="display:block; margin-top:10px;">
         <div class="checkbox-row"><input type="checkbox" id="borrowCheckbox"><label style="margin:0;">Ứng phép năm sau (đã ứng <span id="currentBorrowed">0</span>)</label></div>
       </div>
       <div class="modal-actions">
@@ -490,8 +492,17 @@
       newYearBtn: $('newYearBtn'), maxMonthsSetting: $('maxMonthsSetting'),
       currentYearDisplay: $('currentYearDisplay'),
       addSoldierModal: $('addSoldierModal'), newSoldierName: $('newSoldierName'), newSoldierYear: $('newSoldierYear'),
-      addSoldierError: $('addSoldierError'), cancelAddSoldier: $('cancelAddSoldier'), confirmAddSoldier: $('confirmAddSoldier')
+      addSoldierError: $('addSoldierError'), cancelAddSoldier: $('cancelAddSoldier'), confirmAddSoldier: $('confirmAddSoldier'),
+      dayCountDisplay: $('dayCountDisplay')
     };
+
+    // --- Hàm định dạng ngày không dùng toISOString ---
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
 
     function parseDate(str) { const parts = str.split('-'); return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])); }
     const computeServiceYears = (enlistYear) => appData.currentYear - enlistYear;
@@ -785,58 +796,166 @@
     elements.calPrevMonth.addEventListener('click', ()=>{ if(calMonth===0){calMonth=11;calYear--;}else calMonth--; renderCalendar(); });
     elements.calNextMonth.addEventListener('click', ()=>{ if(calMonth===11){calMonth=0;calYear++;}else calMonth++; renderCalendar(); });
 
-    function openModal() {
-      const soldier = getSelected(); if (!soldier) { alert('Chọn quân nhân trước.'); return; }
-      elements.startDate.value = new Date().toISOString().slice(0,10); elements.endDate.value = elements.startDate.value;
-      elements.noteText.value = ''; elements.modalError.textContent = ''; elements.maxDaysHint.style.display = 'none';
-      elements.borrowSection.style.display = 'none'; elements.borrowCheckbox.checked = false;
-      elements.currentBorrowed.textContent = soldier.borrowedDays||0;
-      elements.registerModal.classList.add('show'); adjustEndDateMax();
-    }
-    function closeModalFunc() { elements.registerModal.classList.remove('show'); }
+    // ====== PHẦN MODAL ======
+    let currentRemainingDays = 0;
+    let currentMaxBorrowAllowed = 0;
 
-    function adjustEndDateMax() {
-      const soldier = getSelected(); if (!soldier) return;
-      const start = elements.startDate.value; if (!start) return;
-      const remaining = soldier.totalDays - getUsedDays(soldier, appData.currentYear);
-      const startDate = parseDate(start); const maxEnd = new Date(startDate);
-      maxEnd.setDate(startDate.getDate() + remaining - 1); const maxEndStr = maxEnd.toISOString().slice(0,10);
+    function updateDayCountDisplay() {
+      const start = elements.startDate.value;
+      const end = elements.endDate.value;
+      if (!start || !end) {
+        elements.dayCountDisplay.textContent = '';
+        return;
+      }
+      const s = parseDate(start), e = parseDate(end);
+      if (e < s) {
+        elements.dayCountDisplay.textContent = '⚠️ Ngày kết thúc phải sau ngày bắt đầu.';
+        elements.dayCountDisplay.style.color = 'var(--danger)';
+        return;
+      }
+      const days = Math.floor((e - s) / 86400000) + 1;
+      const willBorrow = elements.borrowCheckbox.checked;
+      const maxTotal = willBorrow ? currentRemainingDays + currentMaxBorrowAllowed : currentRemainingDays;
+      let msg = `📅 Số ngày nghỉ: ${days}`;
+      if (days > maxTotal) {
+        msg += ` (❌ Vượt quá ${maxTotal} ngày cho phép)`;
+        elements.dayCountDisplay.style.color = 'var(--danger)';
+      } else {
+        msg += ` (✅ Còn lại ${maxTotal - days} ngày)`;
+        elements.dayCountDisplay.style.color = 'var(--good)';
+      }
+      elements.dayCountDisplay.textContent = msg;
+    }
+
+    function updateStatusMessage() {
+      const soldier = getSelected();
+      if (!soldier) return;
+      const willBorrow = elements.borrowCheckbox.checked;
+      const maxTotal = willBorrow ? currentRemainingDays + currentMaxBorrowAllowed : currentRemainingDays;
+      let msg = `Còn lại ${currentRemainingDays} ngày phép`;
+      if (willBorrow) {
+        msg += `, có thể ứng thêm ${currentMaxBorrowAllowed} ngày. Tổng tối đa ${maxTotal} ngày`;
+      }
+      msg += '.';
+      elements.maxDaysHint.style.display = 'block';
+      elements.maxDaysHint.textContent = msg;
+      elements.maxDaysHint.className = 'max-days-hint';
+      updateDayCountDisplay();
+    }
+
+    function updateEndDateMax() {
+      const start = elements.startDate.value;
+      if (!start) return;
+      const willBorrow = elements.borrowCheckbox.checked;
+      const maxAdditionalDays = willBorrow ? currentRemainingDays + currentMaxBorrowAllowed : currentRemainingDays;
+      if (maxAdditionalDays <= 0) {
+        elements.endDate.max = start;
+        elements.endDate.disabled = true;
+        elements.maxDaysHint.textContent = 'Bạn không còn ngày phép nào để sử dụng.';
+        elements.maxDaysHint.style.display = 'block';
+        updateDayCountDisplay();
+        return;
+      }
+      elements.endDate.disabled = false;
+      const startDate = parseDate(start);
+      const maxEnd = new Date(startDate);
+      maxEnd.setDate(startDate.getDate() + maxAdditionalDays - 1);
+      // Định dạng thủ công để tránh lỗi múi giờ
+      const maxEndStr = formatDate(maxEnd);
       elements.endDate.max = maxEndStr;
+      
       const currentEnd = elements.endDate.value;
       if (currentEnd && currentEnd > maxEndStr) {
-        elements.endDate.value = maxEndStr; elements.maxDaysHint.style.display = 'block';
-        elements.maxDaysHint.textContent = `Bạn chỉ còn ${remaining} ngày. Ngày kết thúc đã được điều chỉnh về ${maxEndStr}.`;
-      } else if (currentEnd) { elements.maxDaysHint.style.display = 'none'; }
+        elements.endDate.value = maxEndStr;
+        elements.maxDaysHint.textContent = `Ngày kết thúc đã được điều chỉnh về ${maxEndStr} (tối đa ${maxAdditionalDays} ngày).`;
+        elements.maxDaysHint.style.display = 'block';
+      } else {
+        updateStatusMessage();
+      }
+      updateDayCountDisplay();
     }
 
-    elements.startDate.addEventListener('change', adjustEndDateMax);
-    elements.endDate.addEventListener('change', () => {
-      const soldier = getSelected(); if (!soldier) return;
-      const start = elements.startDate.value, end = elements.endDate.value; if (!start || !end) return;
-      const days = Math.floor((parseDate(end) - parseDate(start)) / 86400000) + 1;
-      const used = getUsedDays(soldier, appData.currentYear); const remaining = soldier.totalDays - used;
-      if (days > remaining) {
-        elements.maxDaysHint.style.display = 'block';
-        elements.maxDaysHint.textContent = `Vượt quá ${remaining} ngày phép còn lại. Ngày kết thúc tối đa là ${new Date(parseDate(start).getTime() + (remaining-1)*86400000).toISOString().slice(0,10)}.`;
-        elements.endDate.value = '';
-      } else { elements.maxDaysHint.style.display = 'none'; }
+    function openModal() {
+      const soldier = getSelected();
+      if (!soldier) { alert('Chọn quân nhân trước.'); return; }
+      elements.startDate.value = new Date().toISOString().slice(0,10); // vẫn dùng tạm nhưng không ảnh hưởng
+      elements.endDate.value = elements.startDate.value;
+      elements.noteText.value = '';
+      elements.modalError.textContent = '';
+      elements.maxDaysHint.style.display = 'none';
+      elements.borrowCheckbox.checked = false;
+      
+      const used = getUsedDays(soldier, appData.currentYear);
+      currentRemainingDays = Math.max(0, soldier.totalDays - used);
+      currentMaxBorrowAllowed = Math.max(0, MAX_BORROW_DAYS - (soldier.borrowedDays || 0));
+      elements.currentBorrowed.textContent = soldier.borrowedDays || 0;
+      
+      updateStatusMessage();
+      updateEndDateMax();
+      
+      elements.registerModal.classList.add('show');
+    }
+
+    elements.borrowCheckbox.addEventListener('change', () => {
+      updateEndDateMax();
+      updateStatusMessage();
     });
+
+    elements.startDate.addEventListener('change', updateEndDateMax);
+    elements.endDate.addEventListener('change', updateDayCountDisplay);
+    elements.endDate.addEventListener('input', updateDayCountDisplay);
 
     elements.saveReg.addEventListener('click', () => {
-      const soldier = getSelected(); if (!soldier) return;
+      const soldier = getSelected();
+      if (!soldier) return;
       const start = elements.startDate.value, end = elements.endDate.value;
       if (!start || !end) { elements.modalError.textContent = 'Chọn ngày.'; return; }
-      const s = parseDate(start), e = parseDate(end); if (e < s) { elements.modalError.textContent = 'Ngày kết thúc không trước ngày bắt đầu.'; return; }
+      const s = parseDate(start), e = parseDate(end);
+      if (e < s) { elements.modalError.textContent = 'Ngày kết thúc không trước ngày bắt đầu.'; return; }
       const days = Math.floor((e - s) / 86400000) + 1;
-      const used = getUsedDays(soldier, appData.currentYear); const remaining = soldier.totalDays - used;
-      const willBorrow = elements.borrowCheckbox.checked; const maxBorrow = MAX_BORROW_DAYS - (soldier.borrowedDays||0);
-      if (!willBorrow && days > remaining) { elements.modalError.textContent = `Không đủ phép! Còn ${remaining} ngày.`; return; }
-      if (willBorrow && days > remaining + maxBorrow) { elements.modalError.textContent = `Vượt quá giới hạn ứng phép.`; return; }
-      if (willBorrow) { const borrowDays = Math.min(days - remaining, maxBorrow); if (borrowDays > 0) soldier.borrowedDays = (soldier.borrowedDays||0) + borrowDays; }
-      soldier.history.push({ id: Date.now(), startDate: start, endDate: end, days, note: elements.noteText.value.trim() || (willBorrow?'Nghỉ phép (có ứng)':'Nghỉ phép') });
-      saveData(); renderDetail(); closeModalFunc();
+      
+      const used = getUsedDays(soldier, appData.currentYear);
+      const remaining = Math.max(0, soldier.totalDays - used);
+      const willBorrow = elements.borrowCheckbox.checked;
+      const maxBorrow = Math.max(0, MAX_BORROW_DAYS - (soldier.borrowedDays || 0));
+      
+      if (!willBorrow && days > remaining) {
+        elements.modalError.textContent = `Không đủ phép! Còn ${remaining} ngày. Hãy chọn ứng phép hoặc giảm số ngày.`;
+        return;
+      }
+      if (willBorrow && days > remaining + maxBorrow) {
+        elements.modalError.textContent = `Vượt quá giới hạn ứng phép. Bạn có thể ứng thêm tối đa ${maxBorrow} ngày. Tổng tối đa ${remaining + maxBorrow} ngày.`;
+        return;
+      }
+      
+      let borrowDays = 0;
+      if (willBorrow && days > remaining) {
+        borrowDays = days - remaining;
+        soldier.borrowedDays = (soldier.borrowedDays || 0) + borrowDays;
+      }
+      
+      const note = elements.noteText.value.trim() || (willBorrow && borrowDays > 0 ? `Nghỉ phép (ứng ${borrowDays} ngày)` : 'Nghỉ phép');
+      soldier.history.push({
+        id: Date.now().toString() + Math.random().toString(36).substr(2,6),
+        startDate: start,
+        endDate: end,
+        days: days,
+        note: note
+      });
+      
+      saveData();
+      renderDetail();
+      closeModalFunc();
     });
 
+    function closeModalFunc() { elements.registerModal.classList.remove('show'); }
+
+    elements.openRegisterBtn.addEventListener('click', openModal);
+    elements.closeModal.addEventListener('click', closeModalFunc);
+    elements.registerModal.addEventListener('click', e => { if (e.target === elements.registerModal) closeModalFunc(); });
+    // ====== KẾT THÚC PHẦN MODAL ======
+
+    // Reset used
     elements.resetUsedBtn.addEventListener('click', () => {
       const soldier = getSelected(); if (!soldier) return;
       if (!confirm(`Xóa lịch sử nghỉ phép năm ${appData.currentYear}?`)) return;
@@ -844,13 +963,21 @@
       soldier.borrowedDays = 0; saveData(); renderDetail();
     });
 
+    // New year - sửa formatDate
     elements.newYearBtn.addEventListener('click', () => {
       if (!confirm(`Chuyển sang năm ${appData.currentYear + 1}?`)) return;
       appData.currentYear += 1;
       appData.soldiers.forEach(s => {
         if (s.borrowedDays > 0) {
           const d = new Date(appData.currentYear, 0, s.borrowedDays);
-          s.history.push({ id: Date.now()+Math.random(), startDate: `${appData.currentYear}-01-01`, endDate: d.toISOString().slice(0,10), days: s.borrowedDays, note: 'Ứng phép từ năm trước' });
+          const endDateStr = formatDate(d);
+          s.history.push({
+            id: Date.now()+Math.random(),
+            startDate: `${appData.currentYear}-01-01`,
+            endDate: endDateStr,
+            days: s.borrowedDays,
+            note: 'Ứng phép từ năm trước'
+          });
           s.borrowedDays = 0;
         }
         s.totalDays = computeTotalDays(computeServiceYears(s.enlistYear), s.stationCondition, s.travelDays||0, s.bonusDays||0);
@@ -858,6 +985,7 @@
       saveData(); renderSoldierList(); renderDetail();
     });
 
+    // Export/Import
     elements.exportBtn.addEventListener('click', () => {
       const dataStr = JSON.stringify(appData, null, 2); const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url;
@@ -888,9 +1016,6 @@
       else elements.maxMonthsSetting.value = appData.maxPlannedMonths;
     });
 
-    elements.openRegisterBtn.addEventListener('click', openModal);
-    elements.closeModal.addEventListener('click', closeModalFunc);
-    elements.registerModal.addEventListener('click', e => { if (e.target === elements.registerModal) closeModalFunc(); });
     elements.addSoldierModal.addEventListener('click', e => { if (e.target === elements.addSoldierModal) closeAddSoldierModal(); });
 
     loadData();
